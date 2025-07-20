@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .header-actions {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      gap: 5px;
+    }
+
+    .config-btn,
+    .help-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid #ddd;
+      background: #f8f9fa;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .config-btn:hover,
+    .help-btn:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    .section {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+    }
+
+    .section h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+
+    .attachment-list {
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      margin: 2px 0;
+      background: #f5f5f5;
+      border-radius: 3px;
+    }
+
+    .attachment-item input[type="radio"] {
+      margin-right: 8px;
+    }
+
+    .text-preview {
+      max-height: 100px;
+      overflow-y: auto;
+      background: #f9f9f9;
+      padding: 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .primary-btn {
+      background: #007cba;
+      color: white;
+    }
+
+    .secondary-btn {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .primary-btn:hover {
+      background: #005a87;
+    }
+
+    .secondary-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+    }
+
+    .config-section {
+      border-top: 1px solid #e0e0e0;
+      margin-top: 15px;
+      padding-top: 15px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 60px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      resize: vertical;
+      font-size: 12px;
+    }
+
+    .config-alert {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .config-alert h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+
+    .config-alert p {
+      margin: 0 0 15px 0;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    .alert-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .alert-actions button {
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .alert-actions .primary-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .alert-actions .primary-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .alert-actions .secondary-btn {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .alert-actions .secondary-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .config-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 13px;
+    }
+
+    .config-status.configured {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .config-status.not-configured {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .quick-setup {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .quick-setup h4 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .setup-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .setup-option:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    .setup-option input[type="radio"] {
+      margin: 0;
+    }
+
+    .setup-option-info {
+      flex: 1;
+    }
+
+    .setup-option-title {
+      font-weight: 500;
+      font-size: 13px;
+      color: #495057;
+    }
+
+    .setup-option-desc {
+      font-size: 11px;
+      color: #6c757d;
+      margin-top: 2px;
+    }
+
+    .status-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    .status-btn:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .config-status .status-btn {
+      color: inherit;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h2>🛡️ 安全需求分析</h2>
+    <div class="header-actions">
+      <button class="config-btn" id="open-config" title="打开配置">⚙️</button>
+      <button class="help-btn" id="show-help" title="使用帮助">❓</button>
+    </div>
+  </div>
+
+  <div id="loading" class="loading" style="display: none;">
+    正在检测页面内容...
+  </div>
+
+  <!-- 配置提醒区域 -->
+  <div id="config-alert" class="config-alert" style="display: none;">
+    <div class="alert-content">
+      <h3>🤖 需要配置AI服务</h3>
+      <p>首次使用需要配置LLM API才能进行安全分析</p>
+      <div class="alert-actions">
+        <button class="primary-btn" id="setup-config">立即配置</button>
+        <button class="secondary-btn" id="dismiss-alert">稍后配置</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content" style="display: none;">
+    <!-- 附件检测区域 -->
+    <div class="section" id="attachments-section" style="display: none;">
+      <h3>📎 检测到的附件</h3>
+      <div class="attachment-list" id="attachment-list"></div>
+    </div>
+
+    <!-- 页面文本内容区域 -->
+    <div class="section" id="text-section" style="display: none;">
+      <h3>📄 页面文本内容</h3>
+      <div class="text-preview" id="text-preview"></div>
+    </div>
+
+    <!-- 手动输入区域 -->
+    <div class="section">
+      <h3>✏️ 手动指定需求</h3>
+      <textarea id="manual-input" placeholder="在此输入产品需求内容，或粘贴需求文档链接..."></textarea>
+    </div>
+
+    <!-- 配置区域 -->
+    <div class="config-section">
+      <h3>⚙️ 分析配置</h3>
+      <textarea id="custom-prompt"
+        placeholder="自定义分析提示词（可选）">根据产品需求内容，识别潜在的安全风险点，明确对应的安全测试场景，并生成相应的安全测试用例。重点关注：数据安全、身份认证、权限控制、输入验证、业务逻辑安全等方面。</textarea>
+    </div>
+
+    <!-- 配置状态指示 -->
+    <div id="config-status-indicator" class="config-status" style="display: none;">
+      <span id="status-icon">✅</span>
+      <span id="status-text">AI服务已配置</span>
+      <button id="status-config-btn" class="status-btn">⚙️</button>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="button-group">
+      <button class="secondary-btn" id="refresh-btn">🔄 重新检测</button>
+      <button class="primary-btn" id="analyze-btn">🚀 开始分析</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
