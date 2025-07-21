@@ -1,0 +1,63 @@
+{
+    "name": "security-requirements-analyzer",
+    "version": "1.0.0",
+    "description": "AI-powered Chrome extension for automated security requirements analysis and threat modeling",
+    "main": "src/background/background.js",
+    "scripts": {
+        "dev": "node tools/debug/debug-launcher.js",
+        "build": "node tools/build/build.js",
+        "debug": "node tools/debug/debug-launcher.js",
+        "debug:info": "node tools/debug/debug-launcher.js --info",
+        "lint": "echo 'Linting not configured yet'",
+        "test": "echo 'Tests not configured yet'",
+        "clean": "rimraf dist .chrome-profile",
+        "package": "npm run build && npm run zip",
+        "zip": "cd dist && zip -r ../security-requirements-analyzer.zip .",
+        "install:dev": "echo 'Development dependencies not required for Chrome extension'"
+    },
+    "keywords": [
+        "chrome-extension",
+        "security-analysis",
+        "threat-modeling",
+        "ai-assistant",
+        "requirements-analysis",
+        "devops-tools",
+        "security-testing",
+        "llm-integration"
+    ],
+    "author": "nehcuh",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nehcuh/security-requirements-analyzer.git"
+    },
+    "bugs": {
+        "url": "https://github.com/nehcuh/security-requirements-analyzer/issues"
+    },
+    "homepage": "https://github.com/nehcuh/security-requirements-analyzer#readme",
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "devDependencies": {},
+    "dependencies": {},
+    "extensionInfo": {
+        "manifestVersion": 3,
+        "chromeMinVersion": "88",
+        "permissions": [
+            "activeTab",
+            "storage",
+            "scripting"
+        ],
+        "supportedPlatforms": [
+            "PingCode",
+            "Jira",
+            "Confluence",
+            "Generic Web Pages"
+        ],
+        "llmProviders": [
+            "OpenAI",
+            "Azure OpenAI",
+            "Anthropic Claude"
+        ]
+    }
+}
