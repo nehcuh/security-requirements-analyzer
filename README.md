@@ -41,22 +41,17 @@
 3. 可选：配置威胁建模平台集成
 4. 自定义分析提示词和页面选择器
 
-## 🛠️ 使用方法
+## 🛠️ 快速开始
 
-### 基本使用流程
-1. **打开需求页面**: 在DevOps平台打开产品需求页面
-2. **启动插件**: 点击浏览器工具栏中的插件图标
-3. **选择内容源**: 
-   - 自动检测的附件文件
-   - 页面文本内容
-   - 手动输入需求
-4. **开始分析**: 点击"开始分析"按钮
-5. **查看结果**: 获得结构化的安全分析报告
+### 三步开始使用
+1. **[安装插件](docs/guides/INSTALL.md)** - 按照详细指南安装和配置
+2. **配置AI服务** - 设置OpenAI、Azure OpenAI或Anthropic API
+3. **开始分析** - 在需求页面点击插件图标，一键分析
 
 ### 支持的平台
-- PingCode及类似的需求管理平台
+- PingCode、Jira、Confluence等需求管理平台
 - 任何包含产品需求文档的网页
-- 支持自定义页面元素选择器
+- 支持PDF/DOCX附件和页面文本内容
 
 ## ⚙️ 配置说明
 
@@ -180,8 +175,9 @@ MIT License - 详见 LICENSE 文件
 
 ### 贡献代码
 - 🤝 查看 [贡献指南](CONTRIBUTING.md)
-- 🔧 阅读 [开发文档](DEBUG.md)
+- 🔧 阅读 [调试指南](docs/guides/DEBUG.md)
 - 📝 查看 [更新日志](CHANGELOG.md)
+- 📚 浏览 [完整文档](docs/README.md)
 
 ### 项目状态
 - ![GitHub release](https://img.shields.io/github/v/release/nehcuh/security-requirements-analyzer)
