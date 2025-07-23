@@ -1656,8 +1656,8 @@ class SecurityAnalysisPopup {
 
       const isConfigured = !!(
         llmConfig.endpoint &&
-        llmConfig.apiKey &&
-        llmConfig.model
+        llmConfig.model &&
+        (llmConfig.provider === "custom" || llmConfig.apiKey)
       );
 
       return {
@@ -1672,7 +1672,11 @@ class SecurityAnalysisPopup {
   }
 
   getMissingConfigFields(config) {
-    const required = ["endpoint", "apiKey", "model"];
+    const required = ["endpoint", "model"];
+    // 只有非自定义提供商才需要API密钥
+    if (config.provider !== "custom") {
+      required.push("apiKey");
+    }
     return required.filter((field) => !config[field]);
   }
 
