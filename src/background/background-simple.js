@@ -140,17 +140,23 @@ class SecurityAnalysisService {
   }
 
   async callLLM(prompt, content) {
-    if (!this.llmConfig.apiKey) {
+    if (this.llmConfig.provider !== "custom" && !this.llmConfig.apiKey) {
       throw new Error("请先配置LLM API密钥");
     }
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // 只有在API密钥存在时才添加Authorization头
+      if (this.llmConfig.apiKey) {
+        headers.Authorization = `Bearer ${this.llmConfig.apiKey}`;
+      }
+
       const response = await fetch(this.llmConfig.endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.llmConfig.apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model: this.llmConfig.model,
           messages: [
