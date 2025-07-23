@@ -4,9 +4,10 @@
 class SecurityAnalysisService {
   constructor() {
     this.llmConfig = {
-      apiKey: "", // 需要用户配置
-      endpoint: "", // LLM API端点
-      model: "gpt-4-vision-preview", // 支持多模态的模型
+      provider: "custom",
+      endpoint: "http://localhost:1234/v1/chat/completions",
+      apiKey: "",
+      model: "deepseek/deepseek-r1-0528-qwen3-8b",
     };
 
     this.threatModelingPlatform = {
@@ -52,8 +53,19 @@ class SecurityAnalysisService {
         "llmConfig",
         "threatModelingConfig",
       ]);
+
+      // 确保包含默认配置
+      const defaultConfig = {
+        provider: "custom",
+        endpoint: "http://localhost:1234/v1/chat/completions",
+        apiKey: "",
+        model: "deepseek/deepseek-r1-0528-qwen3-8b",
+      };
+
       if (result.llmConfig) {
-        this.llmConfig = { ...this.llmConfig, ...result.llmConfig };
+        this.llmConfig = { ...defaultConfig, ...result.llmConfig };
+      } else {
+        this.llmConfig = defaultConfig;
       }
       if (result.threatModelingConfig) {
         this.threatModelingPlatform = {

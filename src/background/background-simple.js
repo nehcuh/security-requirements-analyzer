@@ -4,9 +4,10 @@
 class SecurityAnalysisService {
   constructor() {
     this.llmConfig = {
+      provider: "custom",
+      endpoint: "http://localhost:1234/v1/chat/completions",
       apiKey: "",
-      endpoint: "",
-      model: "gpt-4-vision-preview",
+      model: "deepseek/deepseek-r1-0528-qwen3-8b",
     };
 
     this.threatModelingPlatform = {
@@ -34,8 +35,19 @@ class SecurityAnalysisService {
         "llmConfig",
         "threatModelingConfig",
       ]);
+
+      // 确保包含默认配置
+      const defaultConfig = {
+        provider: "custom",
+        endpoint: "http://localhost:1234/v1/chat/completions",
+        apiKey: "",
+        model: "deepseek/deepseek-r1-0528-qwen3-8b",
+      };
+
       if (result.llmConfig) {
-        this.llmConfig = { ...this.llmConfig, ...result.llmConfig };
+        this.llmConfig = { ...defaultConfig, ...result.llmConfig };
+      } else {
+        this.llmConfig = defaultConfig;
       }
       if (result.threatModelingConfig) {
         this.threatModelingPlatform = {
