@@ -297,7 +297,7 @@ class STACService {
    * Create an indexing system for efficient scenario matching
    */
   createScenarioIndex() {
-    console.log('Creating scenario index...');
+    // Creating scenario index
     
     this.scenarioIndex.clear();
     
@@ -323,7 +323,7 @@ class STACService {
       }
     }
     
-    console.log(`Created index with ${this.scenarioIndex.size} keywords`);
+    // Index created successfully
   }
 
   /**
@@ -421,7 +421,7 @@ class STACService {
       const cacheKey = this._generateMatchCacheKey(content);
       const cachedResult = this._getFromMatchCache(cacheKey);
       if (cachedResult && !options.bypassCache) {
-        console.log('STAC matching result retrieved from cache');
+        // Result retrieved from cache
         return cachedResult;
       }
 
@@ -935,7 +935,7 @@ class STACService {
       }
     }
     
-    console.log(`STAC cache cleanup completed. Removed ${cleanedCount} expired entries. Cache size: ${this.matchCache.size}`);
+    // Cache cleanup completed
   }
   
   /**
@@ -1195,7 +1195,7 @@ class STACService {
     this.matchCache.clear();
     this.scenarioIndex.clear();
     
-    console.log('STACService cleanup completed');
+    // STACService cleanup completed
   }
 
   /**
@@ -2132,7 +2132,7 @@ class STACService {
     if (context.error) {
       console.error('[STACService]', message, logEntry.context);
     } else {
-      console.log('[STACService]', message, logEntry.context);
+      // Log entry recorded
     }
     
     // Store performance metrics
@@ -2150,7 +2150,7 @@ class STACService {
       
       sessionStorage.setItem('stacServiceLogs', JSON.stringify(existingLogs));
     } catch (storageError) {
-      console.warn('Failed to store STAC log:', storageError);
+      // Failed to store log
     }
   }
   
@@ -2194,7 +2194,7 @@ class STACService {
       this.performanceMetrics.lastUpdated = new Date().toISOString();
       
     } catch (error) {
-      console.warn('Failed to update performance metrics:', error);
+      // Failed to update performance metrics
     }
   }
   
@@ -2236,7 +2236,7 @@ class STACService {
     try {
       return JSON.parse(sessionStorage.getItem('stacServiceLogs') || '[]');
     } catch (error) {
-      console.warn('Failed to retrieve STAC logs:', error);
+      // Failed to retrieve logs
       return [];
     }
   }
@@ -2250,7 +2250,7 @@ class STACService {
       sessionStorage.removeItem('stacServiceLogs');
       return true;
     } catch (error) {
-      console.warn('Failed to clear STAC logs:', error);
+      // Failed to clear logs
       return false;
     }
   }

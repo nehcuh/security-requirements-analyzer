@@ -1,750 +1,909 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
-<head>
-  <meta charset="utf-8">
-  <style>
-    body {
-      width: 350px;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .header-actions {
-      position: absolute;
-      top: 0;
-      right: 0;
-      display: flex;
-      gap: 5px;
-    }
-
-    .config-btn,
-    .help-btn {
-      width: 30px;
-      height: 30px;
-      padding: 0;
-      border: 1px solid #ddd;
-      background: #f8f9fa;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .config-btn:hover,
-    .help-btn:hover {
-      background: #e9ecef;
-      border-color: #adb5bd;
-    }
-
-    .section {
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #e0e0e0;
-      border-radius: 5px;
-    }
-
-    .section h3 {
-      margin: 0 0 10px 0;
-      color: #333;
-    }
-
-    .attachment-list {
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    .attachment-item {
-      display: flex;
-      align-items: flex-start;
-      padding: 12px;
-      margin: 8px 0;
-      background: #f8f9fa;
-      border: 2px solid #e9ecef;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .attachment-item:hover {
-      background: #e9ecef;
-      border-color: #007cba;
-    }
-
-    .attachment-item.selected {
-      background: #e3f2fd;
-      border-color: #007cba;
-      box-shadow: 0 2px 8px rgba(0, 124, 186, 0.2);
-    }
-
-    .attachment-item.prd-recommended {
-      background: #fff3e0;
-      border-color: #ff9800;
-      position: relative;
-    }
-
-    .attachment-item.prd-recommended::before {
-      content: "⭐ 推荐";
-      position: absolute;
-      top: -8px;
-      right: 8px;
-      background: #ff9800;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
-    .attachment-item input[type="radio"] {
-      margin-right: 12px;
-      margin-top: 2px;
-    }
-
-    .attachment-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .attachment-name {
-      font-weight: 500;
-      color: #333;
-      font-size: 14px;
-      line-height: 1.3;
-    }
-
-    .attachment-metadata {
-      display: flex;
-      gap: 12px;
-      font-size: 11px;
-      color: #666;
-    }
-
-    .attachment-type {
-      background: #007cba;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 500;
-    }
-
-    .attachment-size {
-      color: #666;
-    }
-
-    .attachment-preview {
-      margin-top: 8px;
-      padding: 8px;
-      background: #f1f3f4;
-      border-radius: 4px;
-      font-size: 11px;
-      color: #555;
-      max-height: 60px;
-      overflow: hidden;
-      display: none;
-    }
-
-    .attachment-item.selected .attachment-preview {
-      display: block;
-    }
-
-    .attachment-actions {
-      display: flex;
-      gap: 4px;
-      margin-top: 8px;
-    }
-
-    .attachment-btn {
-      padding: 4px 8px;
-      border: 1px solid #ddd;
-      background: white;
-      border-radius: 4px;
-      font-size: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .attachment-btn:hover {
-      background: #f8f9fa;
-      border-color: #007cba;
-    }
-
-    .selection-timeout {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 4px;
-      padding: 8px 12px;
-      margin: 8px 0;
-      font-size: 12px;
-      color: #856404;
-      display: none;
-    }
-
-    .selection-timeout.active {
-      display: block;
-    }
-
-    .timeout-progress {
-      width: 100%;
-      height: 4px;
-      background: #f8f9fa;
-      border-radius: 2px;
-      margin-top: 4px;
-      overflow: hidden;
-    }
-
-    .timeout-progress-bar {
-      height: 100%;
-      background: #ffc107;
-      transition: width 0.1s linear;
-    }
-
-    .text-preview {
-      max-height: 100px;
-      overflow-y: auto;
-      background: #f9f9f9;
-      padding: 8px;
-      border-radius: 3px;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    button {
-      flex: 1;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .primary-btn {
-      background: #007cba;
-      color: white;
-    }
-
-    .secondary-btn {
-      background: #f0f0f0;
-      color: #333;
-    }
-
-    .primary-btn:hover {
-      background: #005a87;
-    }
-
-    .secondary-btn:hover {
-      background: #e0e0e0;
-    }
-
-    .loading {
-      text-align: center;
-      color: #666;
-    }
-
-    .config-section {
-      border-top: 1px solid #e0e0e0;
-      margin-top: 15px;
-      padding-top: 15px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 60px;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      resize: vertical;
-      font-size: 12px;
-    }
-
-    .config-alert {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .config-alert h3 {
-      margin: 0 0 10px 0;
-      font-size: 18px;
-    }
-
-    .config-alert p {
-      margin: 0 0 15px 0;
-      opacity: 0.9;
-      line-height: 1.4;
-    }
-
-    .alert-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .alert-actions button {
-      padding: 8px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-
-    .alert-actions .primary-btn {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-    }
-
-    .alert-actions .primary-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .alert-actions .secondary-btn {
-      background: transparent;
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .alert-actions .secondary-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .config-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      margin-bottom: 15px;
-      font-size: 13px;
-    }
-
-    .config-status.configured {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .config-status.not-configured {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-    }
-
-    .quick-setup {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 5px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-
-    .quick-setup h4 {
-      margin: 0 0 10px 0;
-      color: #495057;
-      font-size: 14px;
-    }
-
-    .setup-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px;
-      margin: 5px 0;
-      border: 1px solid #e9ecef;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .setup-option:hover {
-      background: #e9ecef;
-      border-color: #adb5bd;
-    }
-
-    .setup-option input[type="radio"] {
-      margin: 0;
-    }
-
-    .setup-option-info {
-      flex: 1;
-    }
-
-    .setup-option-title {
-      font-weight: 500;
-      font-size: 13px;
-      color: #495057;
-    }
-
-    .setup-option-desc {
-      font-size: 11px;
-      color: #6c757d;
-      margin-top: 2px;
-    }
-
-    .status-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      margin-left: auto;
-    }
-
-    .status-btn:hover {
-      background: rgba(0, 0, 0, 0.1);
-    }
-
-    .config-status .status-btn {
-      color: inherit;
-    }
-
-    /* Progress Indicators */
-    .progress-container {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 5px;
-      padding: 15px;
-      margin: 10px 0;
-      display: none;
-    }
-
-    .progress-container.active {
-      display: block;
-    }
-
-    .progress-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .progress-spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #e9ecef;
-      border-top: 2px solid #007cba;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .progress-text {
-      font-weight: 500;
-      color: #495057;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: #e9ecef;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #007cba, #0056b3);
-      border-radius: 4px;
-      transition: width 0.3s ease;
-      width: 0%;
-    }
-
-    .progress-details {
-      font-size: 12px;
-      color: #666;
-      margin-top: 5px;
-    }
-
-    .progress-step {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 5px 0;
-      font-size: 13px;
-    }
-
-    .step-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
-    .step-icon.pending {
-      background: #e9ecef;
-      color: #6c757d;
-    }
-
-    .step-icon.active {
-      background: #007cba;
-      color: white;
-    }
-
-    .step-icon.completed {
-      background: #28a745;
-      color: white;
-    }
-
-    .step-icon.error {
-      background: #dc3545;
-      color: white;
-    }
-
-    /* Error Handling */
-    .error-container {
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
-      border-radius: 5px;
-      padding: 15px;
-      margin: 10px 0;
-      display: none;
-    }
-
-    .error-container.active {
-      display: block;
-    }
-
-    .error-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .error-icon {
-      color: #721c24;
-      font-size: 18px;
-    }
-
-    .error-title {
-      font-weight: 500;
-      color: #721c24;
-    }
-
-    .error-message {
-      color: #721c24;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    .error-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .error-btn {
-      padding: 6px 12px;
-      border: 1px solid #f5c6cb;
-      background: white;
-      color: #721c24;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      transition: all 0.2s;
-    }
-
-    .error-btn:hover {
-      background: #f5c6cb;
-    }
-
-    .error-btn.primary {
-      background: #721c24;
-      color: white;
-      border-color: #721c24;
-    }
-
-    .error-btn.primary:hover {
-      background: #5a1a1f;
-    }
-
-    .retry-container {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 5px;
-      padding: 12px;
-      margin: 10px 0;
-      display: none;
-    }
-
-    .retry-container.active {
-      display: block;
-    }
-
-    .retry-message {
-      color: #856404;
-      margin-bottom: 8px;
-      font-size: 13px;
-    }
-
-    .retry-attempts {
-      font-size: 11px;
-      color: #856404;
-      margin-bottom: 8px;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="header">
-    <h2>🛡️ 安全需求分析</h2>
-    <div class="header-actions">
-      <button class="config-btn" id="open-config" title="打开配置">⚙️</button>
-      <button class="help-btn" id="show-help" title="使用帮助">❓</button>
-    </div>
-  </div>
-
-  <div id="loading" class="loading" style="display: none;">
-    正在检测页面内容...
-  </div>
-
-  <!-- Progress Indicator -->
-  <div id="progress-container" class="progress-container">
-    <div class="progress-header">
-      <div class="progress-spinner"></div>
-      <div class="progress-text" id="progress-text">处理中...</div>
-    </div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progress-fill"></div>
-    </div>
-    <div class="progress-details" id="progress-details">正在初始化...</div>
-    <div id="progress-steps">
-      <div class="progress-step">
-        <div class="step-icon pending" id="step-parse">1</div>
-        <span>解析文档内容</span>
-      </div>
-      <div class="progress-step">
-        <div class="step-icon pending" id="step-stac">2</div>
-        <span>STAC知识库匹配</span>
-      </div>
-      <div class="progress-step">
-        <div class="step-icon pending" id="step-ai">3</div>
-        <span>AI分析补充</span>
-      </div>
-      <div class="progress-step">
-        <div class="step-icon pending" id="step-result">4</div>
-        <span>生成分析结果</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Error Container -->
-  <div id="error-container" class="error-container">
-    <div class="error-header">
-      <div class="error-icon">⚠️</div>
-      <div class="error-title" id="error-title">操作失败</div>
-    </div>
-    <div class="error-message" id="error-message"></div>
-    <div class="error-actions" id="error-actions">
-      <button class="error-btn primary" id="retry-btn">重试</button>
-      <button class="error-btn" id="fallback-btn">使用备选方案</button>
-      <button class="error-btn" id="dismiss-error-btn">关闭</button>
-    </div>
-  </div>
-
-  <!-- Retry Container -->
-  <div id="retry-container" class="retry-container">
-    <div class="retry-message" id="retry-message">正在重试操作...</div>
-    <div class="retry-attempts" id="retry-attempts">重试次数: 1/3</div>
-  </div>
-
-  <!-- 配置提醒区域 -->
-  <div id="config-alert" class="config-alert" style="display: none;">
-    <div class="alert-content">
-      <h3>🤖 需要配置AI服务</h3>
-      <p>首次使用需要配置LLM API才能进行安全分析</p>
-      <div class="alert-actions">
-        <button class="primary-btn" id="setup-config">立即配置</button>
-        <button class="secondary-btn" id="dismiss-alert">稍后配置</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="content" style="display: none;">
-    <!-- 附件检测区域 -->
-    <div class="section" id="attachments-section" style="display: none;">
-      <h3>📎 检测到的附件</h3>
-      <div class="selection-timeout" id="selection-timeout">
-        <div>⏱️ 自动选择倒计时: <span id="timeout-counter">10</span>秒</div>
-        <div class="timeout-progress">
-          <div class="timeout-progress-bar" id="timeout-progress-bar"></div>
+    <head>
+        <meta charset="utf-8" />
+        <style>
+            body {
+                width: 350px;
+                padding: 20px;
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 20px;
+                position: relative;
+            }
+
+            .debug-toggle {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 20px;
+                height: 20px;
+                background: #f8f9fa;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #666;
+            }
+
+            .debug-toggle:hover {
+                background: #e9ecef;
+                color: #007cba;
+            }
+
+            .debug-info {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 8px;
+                margin: 10px 0;
+                font-size: 11px;
+                color: #6c757d;
+                display: none;
+            }
+
+            .debug-info.active {
+                display: block;
+            }
+
+            .debug-actions {
+                display: flex;
+                gap: 5px;
+                margin-top: 5px;
+            }
+
+            .debug-btn {
+                background: #007cba;
+                color: white;
+                border: none;
+                padding: 2px 6px;
+                border-radius: 2px;
+                cursor: pointer;
+                font-size: 9px;
+            }
+
+            .debug-btn:hover {
+                background: #0056b3;
+            }
+
+            .debug-btn.secondary {
+                background: #6c757d;
+            }
+
+            .debug-btn.success {
+                background: #28a745;
+            }
+
+            .attachment-debug {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 4px;
+                padding: 8px;
+                margin: 5px 0;
+                font-size: 11px;
+                color: #856404;
+            }
+
+            .header-actions {
+                position: absolute;
+                top: 0;
+                right: 0;
+                display: flex;
+                gap: 5px;
+            }
+
+            .config-btn,
+            .help-btn {
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                border: 1px solid #ddd;
+                background: #f8f9fa;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .config-btn:hover,
+            .help-btn:hover {
+                background: #e9ecef;
+                border-color: #adb5bd;
+            }
+
+            .section {
+                margin-bottom: 15px;
+                padding: 10px;
+                border: 1px solid #e0e0e0;
+                border-radius: 5px;
+            }
+
+            .section h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+            }
+
+            .attachment-list {
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            .attachment-item {
+                display: flex;
+                align-items: flex-start;
+                padding: 12px;
+                margin: 8px 0;
+                background: #f8f9fa;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                position: relative;
+            }
+
+            .attachment-item:hover {
+                background: #e9ecef;
+                border-color: #007cba;
+            }
+
+            .attachment-item.selected {
+                background: #e3f2fd;
+                border-color: #007cba;
+                box-shadow: 0 2px 8px rgba(0, 124, 186, 0.2);
+            }
+
+            .attachment-item.prd-recommended {
+                background: #fff3e0;
+                border-color: #ff9800;
+                position: relative;
+            }
+
+            .attachment-item.prd-recommended::before {
+                content: "⭐ 推荐";
+                position: absolute;
+                top: -8px;
+                right: 8px;
+                background: #ff9800;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+
+            .attachment-item input[type="radio"] {
+                margin-right: 12px;
+                margin-top: 2px;
+            }
+
+            .attachment-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .attachment-name {
+                font-weight: 500;
+                color: #333;
+                font-size: 14px;
+                line-height: 1.3;
+            }
+
+            .attachment-metadata {
+                display: flex;
+                gap: 12px;
+                font-size: 11px;
+                color: #666;
+            }
+
+            .attachment-type {
+                background: #007cba;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+
+            .attachment-size {
+                color: #666;
+            }
+
+            .attachment-preview {
+                margin-top: 8px;
+                padding: 8px;
+                background: #f1f3f4;
+                border-radius: 4px;
+                font-size: 11px;
+                color: #555;
+                max-height: 60px;
+                overflow: hidden;
+                display: none;
+            }
+
+            .attachment-item.selected .attachment-preview {
+                display: block;
+            }
+
+            .attachment-actions {
+                display: flex;
+                gap: 4px;
+                margin-top: 8px;
+            }
+
+            .attachment-btn {
+                padding: 4px 8px;
+                border: 1px solid #ddd;
+                background: white;
+                border-radius: 4px;
+                font-size: 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .attachment-btn:hover {
+                background: #f8f9fa;
+                border-color: #007cba;
+            }
+
+            .selection-timeout {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 4px;
+                padding: 8px 12px;
+                margin: 8px 0;
+                font-size: 12px;
+                color: #856404;
+                display: none;
+            }
+
+            .selection-timeout.active {
+                display: block;
+            }
+
+            .timeout-progress {
+                width: 100%;
+                height: 4px;
+                background: #f8f9fa;
+                border-radius: 2px;
+                margin-top: 4px;
+                overflow: hidden;
+            }
+
+            .timeout-progress-bar {
+                height: 100%;
+                background: #ffc107;
+                transition: width 0.1s linear;
+            }
+
+            .text-preview {
+                max-height: 100px;
+                overflow-y: auto;
+                background: #f9f9f9;
+                padding: 8px;
+                border-radius: 3px;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .button-group {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+            button {
+                flex: 1;
+                padding: 8px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+            .primary-btn {
+                background: #007cba;
+                color: white;
+            }
+
+            .secondary-btn {
+                background: #f0f0f0;
+                color: #333;
+            }
+
+            .primary-btn:hover {
+                background: #005a87;
+            }
+
+            .secondary-btn:hover {
+                background: #e0e0e0;
+            }
+
+            .loading {
+                text-align: center;
+                color: #666;
+            }
+
+            .config-section {
+                border-top: 1px solid #e0e0e0;
+                margin-top: 15px;
+                padding-top: 15px;
+            }
+
+            textarea {
+                width: 100%;
+                height: 60px;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                resize: vertical;
+                font-size: 12px;
+            }
+
+            .config-alert {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .config-alert h3 {
+                margin: 0 0 10px 0;
+                font-size: 18px;
+            }
+
+            .config-alert p {
+                margin: 0 0 15px 0;
+                opacity: 0.9;
+                line-height: 1.4;
+            }
+
+            .alert-actions {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+
+            .alert-actions button {
+                padding: 8px 16px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.2s;
+            }
+
+            .alert-actions .primary-btn {
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+            }
+
+            .alert-actions .primary-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            .alert-actions .secondary-btn {
+                background: transparent;
+                color: rgba(255, 255, 255, 0.8);
+            }
+
+            .alert-actions .secondary-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+
+            .config-status {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                background: #f8f9fa;
+                border-radius: 4px;
+                margin-bottom: 15px;
+                font-size: 13px;
+            }
+
+            .config-status.configured {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            .config-status.not-configured {
+                background: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeaa7;
+            }
+
+            .quick-setup {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .quick-setup h4 {
+                margin: 0 0 10px 0;
+                color: #495057;
+                font-size: 14px;
+            }
+
+            .setup-option {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px;
+                margin: 5px 0;
+                border: 1px solid #e9ecef;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .setup-option:hover {
+                background: #e9ecef;
+                border-color: #adb5bd;
+            }
+
+            .setup-option input[type="radio"] {
+                margin: 0;
+            }
+
+            .setup-option-info {
+                flex: 1;
+            }
+
+            .setup-option-title {
+                font-weight: 500;
+                font-size: 13px;
+                color: #495057;
+            }
+
+            .setup-option-desc {
+                font-size: 11px;
+                color: #6c757d;
+                margin-top: 2px;
+            }
+
+            .status-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 14px;
+                padding: 2px 6px;
+                border-radius: 3px;
+                margin-left: auto;
+            }
+
+            .status-btn:hover {
+                background: rgba(0, 0, 0, 0.1);
+            }
+
+            .config-status .status-btn {
+                color: inherit;
+            }
+
+            /* Progress Indicators */
+            .progress-container {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                padding: 15px;
+                margin: 10px 0;
+                display: none;
+            }
+
+            .progress-container.active {
+                display: block;
+            }
+
+            .progress-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .progress-spinner {
+                width: 20px;
+                height: 20px;
+                border: 2px solid #e9ecef;
+                border-top: 2px solid #007cba;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .progress-text {
+                font-weight: 500;
+                color: #495057;
+            }
+
+            .progress-bar {
+                width: 100%;
+                height: 8px;
+                background: #e9ecef;
+                border-radius: 4px;
+                overflow: hidden;
+                margin: 8px 0;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #007cba, #0056b3);
+                border-radius: 4px;
+                transition: width 0.3s ease;
+                width: 0%;
+            }
+
+            .progress-details {
+                font-size: 12px;
+                color: #666;
+                margin-top: 5px;
+            }
+
+            .progress-step {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 5px 0;
+                font-size: 13px;
+            }
+
+            .step-icon {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                font-weight: bold;
+            }
+
+            .step-icon.pending {
+                background: #e9ecef;
+                color: #6c757d;
+            }
+
+            .step-icon.active {
+                background: #007cba;
+                color: white;
+            }
+
+            .step-icon.completed {
+                background: #28a745;
+                color: white;
+            }
+
+            .step-icon.error {
+                background: #dc3545;
+                color: white;
+            }
+
+            /* Error Handling */
+            .error-container {
+                background: #f8d7da;
+                border: 1px solid #f5c6cb;
+                border-radius: 5px;
+                padding: 15px;
+                margin: 10px 0;
+                display: none;
+            }
+
+            .error-container.active {
+                display: block;
+            }
+
+            .error-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .error-icon {
+                color: #721c24;
+                font-size: 18px;
+            }
+
+            .error-title {
+                font-weight: 500;
+                color: #721c24;
+            }
+
+            .error-message {
+                color: #721c24;
+                margin-bottom: 10px;
+                line-height: 1.4;
+            }
+
+            .error-actions {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .error-btn {
+                padding: 6px 12px;
+                border: 1px solid #f5c6cb;
+                background: white;
+                color: #721c24;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+            }
+
+            .error-btn:hover {
+                background: #f5c6cb;
+            }
+
+            .error-btn.primary {
+                background: #721c24;
+                color: white;
+                border-color: #721c24;
+            }
+
+            .error-btn.primary:hover {
+                background: #5a1a1f;
+            }
+
+            .retry-container {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 5px;
+                padding: 12px;
+                margin: 10px 0;
+                display: none;
+            }
+
+            .retry-container.active {
+                display: block;
+            }
+
+            .retry-message {
+                color: #856404;
+                margin-bottom: 8px;
+                font-size: 13px;
+            }
+
+            .retry-attempts {
+                font-size: 11px;
+                color: #856404;
+                margin-bottom: 8px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="header">
+            <div class="debug-toggle" id="debug-toggle" title="调试模式">
+                🔧
+            </div>
+            <h1>🛡️ 安全需求分析</h1>
+            <div class="header-actions">
+                <button class="config-btn" id="config-btn" title="配置">
+                    ⚙️
+                </button>
+                <button class="help-btn" id="help-btn" title="帮助">❓</button>
+            </div>
         </div>
-      </div>
-      <div class="attachment-list" id="attachment-list"></div>
-      <div class="attachment-summary" id="attachment-summary" style="display: none;">
-        <small style="color: #666;">
-          共检测到 <span id="attachment-count">0</span> 个附件，
-          其中 <span id="prd-count">0</span> 个可能是PRD文档
-        </small>
-      </div>
-    </div>
 
-    <!-- 页面文本内容区域 -->
-    <div class="section" id="text-section" style="display: none;">
-      <h3>📄 页面文本内容</h3>
-      <div class="text-preview" id="text-preview"></div>
-    </div>
+        <div id="loading" class="loading" style="display: none">
+            正在检测页面内容...
+        </div>
 
-    <!-- 手动输入区域 -->
-    <div class="section">
-      <h3>✏️ 手动指定需求</h3>
-      <textarea id="manual-input" placeholder="在此输入产品需求内容，或粘贴需求文档链接..."></textarea>
-    </div>
+        <!-- Progress Indicator -->
+        <div id="progress-container" class="progress-container">
+            <div class="progress-header">
+                <div class="progress-spinner"></div>
+                <div class="progress-text" id="progress-text">处理中...</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-details" id="progress-details">
+                正在初始化...
+            </div>
+            <div id="progress-steps">
+                <div class="progress-step">
+                    <div class="step-icon pending" id="step-parse">1</div>
+                    <span>解析文档内容</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-icon pending" id="step-stac">2</div>
+                    <span>STAC知识库匹配</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-icon pending" id="step-ai">3</div>
+                    <span>AI分析补充</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-icon pending" id="step-result">4</div>
+                    <span>生成分析结果</span>
+                </div>
+            </div>
+        </div>
 
-    <!-- 配置区域 -->
-    <div class="config-section">
-      <h3>⚙️ 分析配置</h3>
-      <textarea id="custom-prompt"
-        placeholder="自定义分析提示词（可选）">根据产品需求内容，识别潜在的安全风险点，明确对应的安全测试场景，并生成相应的安全测试用例。重点关注：数据安全、身份认证、权限控制、输入验证、业务逻辑安全等方面。</textarea>
-    </div>
+        <!-- Error Container -->
+        <div id="error-container" class="error-container">
+            <div class="error-header">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title" id="error-title">操作失败</div>
+            </div>
+            <div class="error-message" id="error-message"></div>
+            <div class="error-actions" id="error-actions">
+                <button class="error-btn primary" id="retry-btn">重试</button>
+                <button class="error-btn" id="fallback-btn">
+                    使用备选方案
+                </button>
+                <button class="error-btn" id="dismiss-error-btn">关闭</button>
+            </div>
+        </div>
 
-    <!-- 配置状态指示 -->
-    <div id="config-status-indicator" class="config-status" style="display: none;">
-      <span id="status-icon">✅</span>
-      <span id="status-text">AI服务已配置</span>
-      <button id="status-config-btn" class="status-btn">⚙️</button>
-    </div>
+        <!-- Retry Container -->
+        <div id="retry-container" class="retry-container">
+            <div class="retry-message" id="retry-message">正在重试操作...</div>
+            <div class="retry-attempts" id="retry-attempts">重试次数: 1/3</div>
+        </div>
 
-    <!-- 操作按钮 -->
-    <div class="button-group">
-      <button class="secondary-btn" id="refresh-btn">🔄 重新检测</button>
-      <button class="primary-btn" id="analyze-btn">🚀 开始分析</button>
-    </div>
-  </div>
+        <!-- 配置提醒区域 -->
+        <div id="config-alert" class="config-alert" style="display: none">
+            <div class="alert-content">
+                <h3>🤖 需要配置AI服务</h3>
+                <p>首次使用需要配置LLM API才能进行安全分析</p>
+                <div class="alert-actions">
+                    <button class="primary-btn" id="setup-config">
+                        立即配置
+                    </button>
+                    <button class="secondary-btn" id="dismiss-alert">
+                        稍后配置
+                    </button>
+                </div>
+            </div>
+        </div>
 
-  <script src="popup.js"></script>
-</body>
+        <div id="content" style="display: none">
+            <!-- 调试信息区域 -->
+            <div class="debug-info" id="debug-info">
+                <div style="font-weight: bold; margin-bottom: 5px">
+                    🔍 调试信息
+                </div>
+                <div id="debug-status">正在检测...</div>
+                <div class="debug-actions">
+                    <button class="debug-btn" id="debug-scan">重新扫描</button>
+                    <button
+                        class="debug-btn secondary"
+                        id="debug-content-script"
+                    >
+                        测试CS
+                    </button>
+                    <button class="debug-btn success" id="debug-panel">
+                        调试面板
+                    </button>
+                </div>
+                <div
+                    id="debug-details"
+                    style="margin-top: 5px; display: none"
+                ></div>
+            </div>
 
+            <!-- 附件检测区域 -->
+            <div class="section" id="attachments-section" style="display: none">
+                <h3>📎 检测到的附件</h3>
+                <div class="selection-timeout" id="selection-timeout">
+                    <div>
+                        ⏱️ 自动选择倒计时:
+                        <span id="timeout-counter">10</span>秒
+                    </div>
+                    <div class="timeout-progress">
+                        <div
+                            class="timeout-progress-bar"
+                            id="timeout-progress-bar"
+                        ></div>
+                    </div>
+                </div>
+                <div class="attachment-list" id="attachment-list"></div>
+                <div
+                    class="attachment-summary"
+                    id="attachment-summary"
+                    style="display: none"
+                >
+                    <small style="color: #666">
+                        共检测到 <span id="attachment-count">0</span> 个附件，
+                        其中 <span id="prd-count">0</span> 个可能是PRD文档
+                    </small>
+                </div>
+                <div
+                    class="attachment-debug"
+                    id="attachment-debug"
+                    style="display: none"
+                >
+                    <div>⚠️ 未检测到附件。可能原因：</div>
+                    <ul style="margin: 5px 0; padding-left: 15px">
+                        <li>页面不包含PDF/DOCX等文件链接</li>
+                        <li>文件链接使用了特殊格式</li>
+                        <li>需要等待页面完全加载</li>
+                    </ul>
+                    <button
+                        class="debug-btn"
+                        onclick="this.parentElement.style.display='none'"
+                    >
+                        关闭
+                    </button>
+                </div>
+            </div>
+
+            <!-- 页面文本内容区域 -->
+            <div class="section" id="text-section" style="display: none">
+                <h3>📄 页面文本内容</h3>
+                <div class="text-preview" id="text-preview"></div>
+            </div>
+
+            <!-- 手动输入区域 -->
+            <div class="section">
+                <h3>✏️ 手动指定需求</h3>
+                <textarea
+                    id="manual-input"
+                    placeholder="在此输入产品需求内容，或粘贴需求文档链接..."
+                ></textarea>
+            </div>
+
+            <!-- 配置区域 -->
+            <div class="config-section">
+                <h3>⚙️ 分析配置</h3>
+                <textarea
+                    id="custom-prompt"
+                    placeholder="自定义分析提示词（可选）"
+                >
+根据产品需求内容，识别潜在的安全风险点，明确对应的安全测试场景，并生成相应的安全测试用例。重点关注：数据安全、身份认证、权限控制、输入验证、业务逻辑安全等方面。</textarea
+                >
+            </div>
+
+            <!-- 配置状态指示 -->
+            <div
+                id="config-status-indicator"
+                class="config-status"
+                style="display: none"
+            >
+                <span id="status-icon">✅</span>
+                <span id="status-text">AI服务已配置</span>
+                <button id="status-config-btn" class="status-btn">⚙️</button>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="button-group">
+                <button class="secondary-btn" id="refresh-btn">
+                    🔄 重新检测
+                </button>
+                <button class="primary-btn" id="analyze-btn">
+                    🚀 开始分析
+                </button>
+            </div>
+        </div>
+
+        <script src="popup.js"></script>
+    </body>
 </html>

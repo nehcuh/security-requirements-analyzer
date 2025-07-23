@@ -67,7 +67,7 @@ class ConfigManager {
           analysisConfig: config.analysisConfig,
           detectionConfig: config.detectionConfig,
         });
-        console.log("已自动保存默认配置");
+        // Default configuration saved automatically
       }
 
       this.populateForm(config);

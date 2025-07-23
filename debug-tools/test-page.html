@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome扩展测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .attachment-list {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .attachment-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        .content-text {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Chrome扩展测试页面</h1>
+    
+    <div class="section">
+        <h2>📋 产品需求文档 (PRD)</h2>
+        <div class="content-text">
+            <p>这是一个产品需求文档的示例内容。本文档描述了新功能的详细需求和规格说明。</p>
+            <p>功能需求包括用户认证、数据管理、报表生成等核心模块。</p>
+            <p>安全要求：所有用户输入必须进行验证，敏感数据需要加密存储。</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📎 附件列表</h2>
+        <div class="attachment-list">
+            <div class="attachment-item">
+                <a href="https://example.com/prd-document.pdf" download="PRD文档.pdf">
+                    📄 PRD文档.pdf (2.5MB)
+                </a>
+            </div>
+            <div class="attachment-item">
+                <a href="https://example.com/requirements.docx" download="需求规格说明.docx">
+                    📄 需求规格说明.docx (1.8MB)
+                </a>
+            </div>
+            <div class="attachment-item">
+                <a href="https://example.com/design-spec.doc" download="设计规格.doc">
+                    📄 设计规格.doc (3.2MB)
+                </a>
+            </div>
+            <div class="attachment-item">
+                <a href="https://example.com/test-cases.xlsx" download="测试用例.xlsx">
+                    📊 测试用例.xlsx (1.1MB)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🔧 测试说明</h2>
+        <ol>
+            <li>在此页面打开Chrome扩展</li>
+            <li>扩展应该能检测到4个附件</li>
+            <li>扩展应该能提取页面文本内容</li>
+            <li>PRD相关的附件应该被优先推荐</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>🐛 调试步骤</h2>
+        <p>如果扩展无法正常工作，请按以下步骤调试：</p>
+        <ol>
+            <li>打开Chrome开发者工具 (F12)</li>
+            <li>切换到Console标签页</li>
+            <li>复制并运行 <code>debug-extension-comprehensive.js</code> 中的代码</li>
+            <li>查看详细的诊断信息</li>
+        </ol>
+    </div>
+
+    <script>
+        // 页面加载完成后的测试脚本
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 测试页面已加载');
+            console.log('📎 页面包含', document.querySelectorAll('a[href*=".pdf"], a[href*=".docx"], a[href*=".doc"], a[href*=".xlsx"]').length, '个文件链接');
+            
+            // 模拟PingCode页面的一些特征
+            document.body.classList.add('pingcode-test-page');
+            
+            // 添加一些测试用的CSS类
+            const contentDiv = document.querySelector('.content-text');
+            if (contentDiv) {
+                contentDiv.classList.add('styx-pivot-detail-content-body');
+            }
+        });
+    </script>
+</body>
+</html>

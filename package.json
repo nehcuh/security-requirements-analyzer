@@ -2,10 +2,10 @@
   "name": "security-requirements-analyzer",
   "version": "1.0.0",
   "description": "AI-powered Chrome extension for automated security requirements analysis and threat modeling",
-  "main": "src/background/background.js",
+  "main": "src/background/background-simple.js",
   "scripts": {
     "dev": "node tools/debug/debug-launcher.js",
-    "build": "node tools/build/build.js",
+    "build": "echo 'Build script not implemented yet'",
     "debug": "node tools/debug/debug-launcher.js",
     "debug:info": "node tools/debug/debug-launcher.js --info",
     "lint": "echo 'Linting not configured yet'",

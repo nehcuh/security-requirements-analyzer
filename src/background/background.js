@@ -544,7 +544,7 @@ class SecurityAnalysisService {
       // Check cache first for performance optimization
       const cachedResult = this.getFromSTACCache(cacheKey);
       if (cachedResult) {
-        console.log("STAC matching result retrieved from cache");
+        // Result retrieved from cache
         return cachedResult;
       }
 

@@ -291,12 +291,12 @@ class DocumentParser {
         // Calculate word count
         result.metadata.wordCount = this._countWords(result.text);
       } catch (metadataError) {
-        console.warn('Failed to extract DOCX metadata:', metadataError);
+        // Failed to extract DOCX metadata
       }
 
       // Log any warnings from mammoth
       if (messages && messages.length > 0) {
-        console.warn('DOCX parsing warnings:', messages);
+        // DOCX parsing warnings detected
       }
 
       return result;
@@ -338,7 +338,7 @@ class DocumentParser {
     const cacheKey = this._generateCacheKey(attachment);
     const cachedResult = this._getFromCache(cacheKey);
     if (cachedResult && !options.bypassCache) {
-      console.log('Document parsing result retrieved from cache');
+      // Result retrieved from cache
       return cachedResult;
     }
     
@@ -389,7 +389,7 @@ class DocumentParser {
       
       // Log security warnings if any
       if (validationResult.warnings.length > 0) {
-        console.warn('File security warnings:', validationResult.warnings);
+        // File security warnings detected
       }
       
       // Parse based on document type with performance optimization
@@ -409,7 +409,7 @@ class DocumentParser {
                 success: true
               };
             } catch (workerError) {
-              console.warn('Worker parsing failed, falling back to main thread:', workerError);
+              // Worker parsing failed, using fallback
               result = await this.parsePDF(processingBuffer);
             }
           } else {
@@ -429,7 +429,7 @@ class DocumentParser {
                 success: true
               };
             } catch (workerError) {
-              console.warn('Worker parsing failed, falling back to main thread:', workerError);
+              // Worker parsing failed, using fallback
               result = await this.parseDOCX(processingBuffer);
             }
           } else {
@@ -697,7 +697,7 @@ class DocumentParser {
       }
     }
     
-    console.log(`Memory cleanup completed. Cache size: ${this.parseResultCache.size}`);
+    // Memory cleanup completed
   }
   
   /**
@@ -1030,7 +1030,7 @@ class DocumentParser {
     this.parseResultCache.clear();
     this.activeOperations.clear();
     
-    console.log('DocumentParser cleanup completed');
+    // DocumentParser cleanup completed
   }
   
   /**
@@ -2869,7 +2869,7 @@ export default DocumentParser;  /**
       context
     };
     
-    console.log(`[SECURITY] ${message}`, context);
+    // Security log recorded
     
     // Store security logs separately
     try {

@@ -25,8 +25,67 @@ class SecurityAnalysisService {
       return true; // 保持异步响应通道开放
     });
 
+    // 监听标签页更新，确保Content Script正确注入
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.status === 'complete' && tab.url) {
+        this.ensureContentScriptInjected(tabId, tab.url);
+      }
+    });
+
+    // 监听扩展启动
+    chrome.runtime.onStartup.addListener(() => {
+      this.injectContentScriptToAllTabs();
+    });
+
+    // 监听扩展安装
+    chrome.runtime.onInstalled.addListener(() => {
+      this.injectContentScriptToAllTabs();
+    });
+
     // 加载配置
     this.loadConfig();
+  }
+
+  async ensureContentScriptInjected(tabId, url) {
+    try {
+      // 跳过chrome://和extension://页面
+      if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) {
+        return;
+      }
+
+      // 测试Content Script是否已经注入
+      try {
+        await chrome.tabs.sendMessage(tabId, { action: 'diagnostic-ping' });
+        // 如果没有抛出异常，说明Content Script已经存在
+        return;
+      } catch (error) {
+        // Content Script不存在，需要注入
+        console.log('Content Script not found, injecting...', url);
+      }
+
+      // 注入Content Script
+      await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ['src/content/content-simple.js']
+      });
+
+      console.log('Content Script injected successfully to:', url);
+    } catch (error) {
+      console.error('Failed to inject content script:', error);
+    }
+  }
+
+  async injectContentScriptToAllTabs() {
+    try {
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        if (tab.id && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+          await this.ensureContentScriptInjected(tab.id, tab.url);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to inject content script to all tabs:', error);
+    }
   }
 
   async loadConfig() {

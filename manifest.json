@@ -3,7 +3,7 @@
   "name": "安全需求分析助手",
   "version": "1.0.0",
   "description": "自动解析产品需求文档并生成安全测试用例",
-  "permissions": ["activeTab", "storage", "scripting", "downloads"],
+  "permissions": ["activeTab", "storage", "scripting", "downloads", "tabs"],
   "host_permissions": ["https://*/*", "http://127.0.0.1/*"],
   "background": {
     "service_worker": "src/background/background-simple.js"
@@ -11,8 +11,9 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content/attachment-sorter.js", "src/content/content.js"],
-      "run_at": "document_end"
+      "js": ["src/content/content-simple.js"],
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
   "action": {
@@ -22,7 +23,7 @@
   "options_page": "src/config/config.html",
   "web_accessible_resources": [
     {
-      "resources": ["libs/*", "assets/*"],
+      "resources": ["libs/*", "assets/*", "*.js", "*.html"],
       "matches": ["<all_urls>"]
     }
   ]
