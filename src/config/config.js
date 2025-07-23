@@ -39,6 +39,9 @@ class ConfigManager {
         "detectionConfig",
       ]);
 
+      // 检查是否是首次使用（没有保存过llmConfig）
+      const isFirstTime = !result.llmConfig;
+
       // 合并默认配置和保存的配置
       const config = {
         llmConfig: { ...this.defaultConfig.llmConfig, ...result.llmConfig },
@@ -55,6 +58,17 @@ class ConfigManager {
           ...result.detectionConfig,
         },
       };
+
+      // 如果是首次使用，自动保存默认配置
+      if (isFirstTime) {
+        await chrome.storage.sync.set({
+          llmConfig: config.llmConfig,
+          threatModelingConfig: config.threatModelingConfig,
+          analysisConfig: config.analysisConfig,
+          detectionConfig: config.detectionConfig,
+        });
+        console.log("已自动保存默认配置");
+      }
 
       this.populateForm(config);
     } catch (error) {
