@@ -35,6 +35,22 @@ export const PROVIDER_DEFAULTS = {
 
 export const SUPPORTED_FILE_TYPES = ['pdf', 'docx', 'doc'];
 
+export const DOCUMENT_PARSER_CONSTANTS = {
+    MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+    PARSING_TIMEOUT: 30000, // 30 seconds
+    CONTENT_TYPES: {
+        PDF: 'application/pdf',
+        DOCX: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        DOC: 'application/msword'
+    }
+};
+
+export const STAC_CONSTANTS = {
+    KNOWLEDGE_BASE_PATH: 'assets/STAC知识库.json',
+    MATCH_THRESHOLD: 0.7, // Minimum confidence score for a match
+    MAX_RESULTS: 10 // Maximum number of results to return
+};
+
 export const MESSAGE_TYPES = {
     DETECT_CONTENT: 'detectContent',
     ANALYZE_CONTENT: 'analyzeContent',

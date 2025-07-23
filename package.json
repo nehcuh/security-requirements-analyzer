@@ -1,63 +1,82 @@
 {
-    "name": "security-requirements-analyzer",
-    "version": "1.0.0",
-    "description": "AI-powered Chrome extension for automated security requirements analysis and threat modeling",
-    "main": "src/background/background.js",
-    "scripts": {
-        "dev": "node tools/debug/debug-launcher.js",
-        "build": "node tools/build/build.js",
-        "debug": "node tools/debug/debug-launcher.js",
-        "debug:info": "node tools/debug/debug-launcher.js --info",
-        "lint": "echo 'Linting not configured yet'",
-        "test": "echo 'Tests not configured yet'",
-        "clean": "rimraf dist .chrome-profile",
-        "package": "npm run build && npm run zip",
-        "zip": "cd dist && zip -r ../security-requirements-analyzer.zip .",
-        "install:dev": "echo 'Development dependencies not required for Chrome extension'"
-    },
-    "keywords": [
-        "chrome-extension",
-        "security-analysis",
-        "threat-modeling",
-        "ai-assistant",
-        "requirements-analysis",
-        "devops-tools",
-        "security-testing",
-        "llm-integration"
+  "name": "security-requirements-analyzer",
+  "version": "1.0.0",
+  "description": "AI-powered Chrome extension for automated security requirements analysis and threat modeling",
+  "main": "src/background/background.js",
+  "scripts": {
+    "dev": "node tools/debug/debug-launcher.js",
+    "build": "node tools/build/build.js",
+    "debug": "node tools/debug/debug-launcher.js",
+    "debug:info": "node tools/debug/debug-launcher.js --info",
+    "lint": "echo 'Linting not configured yet'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:unit": "node scripts/test-runner.js unit",
+    "test:stac": "node scripts/test-runner.js stac",
+    "test:integration": "node scripts/test-runner.js integration",
+    "test:e2e": "node scripts/test-runner.js e2e",
+    "test:coverage": "node scripts/test-runner.js coverage",
+    "clean": "rimraf dist .chrome-profile",
+    "package": "npm run build && npm run zip",
+    "zip": "cd dist && zip -r ../security-requirements-analyzer.zip .",
+    "install:dev": "echo 'Development dependencies not required for Chrome extension'",
+    "start-server": "http-server -p 8080 > /dev/null 2>&1 &",
+    "stop-server": "pkill -f http-server",
+    "test:custom": "npm run start-server && sleep 2 && node tests/custom-e2e-test.js; npm run stop-server"
+  },
+  "keywords": [
+    "chrome-extension",
+    "security-analysis",
+    "threat-modeling",
+    "ai-assistant",
+    "requirements-analysis",
+    "devops-tools",
+    "security-testing",
+    "llm-integration"
+  ],
+  "author": "nehcuh",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nehcuh/security-requirements-analyzer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nehcuh/security-requirements-analyzer/issues"
+  },
+  "homepage": "https://github.com/nehcuh/security-requirements-analyzer#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^1.0.0",
+    "http-server": "^14.1.1",
+    "jsdom": "^26.1.0",
+    "puppeteer": "^24.14.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "mammoth": "^1.6.0",
+    "pdfjs-dist": "^3.11.174"
+  },
+  "extensionInfo": {
+    "manifestVersion": 3,
+    "chromeMinVersion": "88",
+    "permissions": [
+      "activeTab",
+      "storage",
+      "scripting"
     ],
-    "author": "nehcuh",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/nehcuh/security-requirements-analyzer.git"
-    },
-    "bugs": {
-        "url": "https://github.com/nehcuh/security-requirements-analyzer/issues"
-    },
-    "homepage": "https://github.com/nehcuh/security-requirements-analyzer#readme",
-    "engines": {
-        "node": ">=14.0.0"
-    },
-    "devDependencies": {},
-    "dependencies": {},
-    "extensionInfo": {
-        "manifestVersion": 3,
-        "chromeMinVersion": "88",
-        "permissions": [
-            "activeTab",
-            "storage",
-            "scripting"
-        ],
-        "supportedPlatforms": [
-            "PingCode",
-            "Jira",
-            "Confluence",
-            "Generic Web Pages"
-        ],
-        "llmProviders": [
-            "OpenAI",
-            "Azure OpenAI",
-            "Anthropic Claude"
-        ]
-    }
+    "supportedPlatforms": [
+      "PingCode",
+      "Jira",
+      "Confluence",
+      "Generic Web Pages"
+    ],
+    "llmProviders": [
+      "OpenAI",
+      "Azure OpenAI",
+      "Anthropic Claude"
+    ]
+  }
 }

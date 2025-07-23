@@ -58,21 +58,156 @@
     }
 
     .attachment-list {
-      max-height: 120px;
+      max-height: 200px;
       overflow-y: auto;
     }
 
     .attachment-item {
       display: flex;
-      align-items: center;
-      padding: 5px;
-      margin: 2px 0;
-      background: #f5f5f5;
-      border-radius: 3px;
+      align-items: flex-start;
+      padding: 12px;
+      margin: 8px 0;
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .attachment-item:hover {
+      background: #e9ecef;
+      border-color: #007cba;
+    }
+
+    .attachment-item.selected {
+      background: #e3f2fd;
+      border-color: #007cba;
+      box-shadow: 0 2px 8px rgba(0, 124, 186, 0.2);
+    }
+
+    .attachment-item.prd-recommended {
+      background: #fff3e0;
+      border-color: #ff9800;
+      position: relative;
+    }
+
+    .attachment-item.prd-recommended::before {
+      content: "⭐ 推荐";
+      position: absolute;
+      top: -8px;
+      right: 8px;
+      background: #ff9800;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: bold;
     }
 
     .attachment-item input[type="radio"] {
-      margin-right: 8px;
+      margin-right: 12px;
+      margin-top: 2px;
+    }
+
+    .attachment-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .attachment-name {
+      font-weight: 500;
+      color: #333;
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .attachment-metadata {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .attachment-type {
+      background: #007cba;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .attachment-size {
+      color: #666;
+    }
+
+    .attachment-preview {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f1f3f4;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #555;
+      max-height: 60px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .attachment-item.selected .attachment-preview {
+      display: block;
+    }
+
+    .attachment-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .attachment-btn {
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .attachment-btn:hover {
+      background: #f8f9fa;
+      border-color: #007cba;
+    }
+
+    .selection-timeout {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 8px 0;
+      font-size: 12px;
+      color: #856404;
+      display: none;
+    }
+
+    .selection-timeout.active {
+      display: block;
+    }
+
+    .timeout-progress {
+      width: 100%;
+      height: 4px;
+      background: #f8f9fa;
+      border-radius: 2px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .timeout-progress-bar {
+      height: 100%;
+      background: #ffc107;
+      transition: width 0.1s linear;
     }
 
     .text-preview {
@@ -284,6 +419,201 @@
     .config-status .status-btn {
       color: inherit;
     }
+
+    /* Progress Indicators */
+    .progress-container {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .progress-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #e9ecef;
+      border-top: 2px solid #007cba;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-text {
+      font-weight: 500;
+      color: #495057;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #007cba, #0056b3);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .progress-details {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 5px 0;
+      font-size: 13px;
+    }
+
+    .step-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .step-icon.pending {
+      background: #e9ecef;
+      color: #6c757d;
+    }
+
+    .step-icon.active {
+      background: #007cba;
+      color: white;
+    }
+
+    .step-icon.completed {
+      background: #28a745;
+      color: white;
+    }
+
+    .step-icon.error {
+      background: #dc3545;
+      color: white;
+    }
+
+    /* Error Handling */
+    .error-container {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .error-container.active {
+      display: block;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .error-icon {
+      color: #721c24;
+      font-size: 18px;
+    }
+
+    .error-title {
+      font-weight: 500;
+      color: #721c24;
+    }
+
+    .error-message {
+      color: #721c24;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .error-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .error-btn {
+      padding: 6px 12px;
+      border: 1px solid #f5c6cb;
+      background: white;
+      color: #721c24;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .error-btn:hover {
+      background: #f5c6cb;
+    }
+
+    .error-btn.primary {
+      background: #721c24;
+      color: white;
+      border-color: #721c24;
+    }
+
+    .error-btn.primary:hover {
+      background: #5a1a1f;
+    }
+
+    .retry-container {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 5px;
+      padding: 12px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .retry-container.active {
+      display: block;
+    }
+
+    .retry-message {
+      color: #856404;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .retry-attempts {
+      font-size: 11px;
+      color: #856404;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 
@@ -298,6 +628,56 @@
 
   <div id="loading" class="loading" style="display: none;">
     正在检测页面内容...
+  </div>
+
+  <!-- Progress Indicator -->
+  <div id="progress-container" class="progress-container">
+    <div class="progress-header">
+      <div class="progress-spinner"></div>
+      <div class="progress-text" id="progress-text">处理中...</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-details" id="progress-details">正在初始化...</div>
+    <div id="progress-steps">
+      <div class="progress-step">
+        <div class="step-icon pending" id="step-parse">1</div>
+        <span>解析文档内容</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-icon pending" id="step-stac">2</div>
+        <span>STAC知识库匹配</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-icon pending" id="step-ai">3</div>
+        <span>AI分析补充</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-icon pending" id="step-result">4</div>
+        <span>生成分析结果</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Container -->
+  <div id="error-container" class="error-container">
+    <div class="error-header">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title" id="error-title">操作失败</div>
+    </div>
+    <div class="error-message" id="error-message"></div>
+    <div class="error-actions" id="error-actions">
+      <button class="error-btn primary" id="retry-btn">重试</button>
+      <button class="error-btn" id="fallback-btn">使用备选方案</button>
+      <button class="error-btn" id="dismiss-error-btn">关闭</button>
+    </div>
+  </div>
+
+  <!-- Retry Container -->
+  <div id="retry-container" class="retry-container">
+    <div class="retry-message" id="retry-message">正在重试操作...</div>
+    <div class="retry-attempts" id="retry-attempts">重试次数: 1/3</div>
   </div>
 
   <!-- 配置提醒区域 -->
@@ -316,7 +696,19 @@
     <!-- 附件检测区域 -->
     <div class="section" id="attachments-section" style="display: none;">
       <h3>📎 检测到的附件</h3>
+      <div class="selection-timeout" id="selection-timeout">
+        <div>⏱️ 自动选择倒计时: <span id="timeout-counter">10</span>秒</div>
+        <div class="timeout-progress">
+          <div class="timeout-progress-bar" id="timeout-progress-bar"></div>
+        </div>
+      </div>
       <div class="attachment-list" id="attachment-list"></div>
+      <div class="attachment-summary" id="attachment-summary" style="display: none;">
+        <small style="color: #666;">
+          共检测到 <span id="attachment-count">0</span> 个附件，
+          其中 <span id="prd-count">0</span> 个可能是PRD文档
+        </small>
+      </div>
     </div>
 
     <!-- 页面文本内容区域 -->

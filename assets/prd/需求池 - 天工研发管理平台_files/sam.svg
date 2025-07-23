@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>软件资产管理</title>
+    <g id="软件资产管理" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" opacity="0.9">
+        <g id="编组">
+            <rect id="矩形" x="0" y="0" width="16" height="16"></rect>
+            <path d="M2,1 L14,1 C14.5522847,1 15,1.44771525 15,2 L15,3 L15,3 L1,3 L1,2 C1,1.44771525 1.44771525,1 2,1 Z" id="矩形" fill="#202D40" fill-rule="nonzero"></path>
+            <path d="M14.25,4.75 L14.25,14 L2,14.25 L1.75,4.75 L14.25,4.75 Z" id="矩形备份" stroke="#99A2AF" stroke-width="1.5" fill-rule="nonzero"></path>
+            <rect id="矩形备份" fill="#99A2AF" x="9" y="11" width="3" height="1.5"></rect>
+            <polygon id="路径-4" fill="#99A2AF" fill-rule="nonzero" points="6.41167845 6.46966991 7.47233862 7.53033009 5.561 9.442 7.58832155 11.4696699 6.52766138 12.5303301 3.43933983 9.44200854"></polygon>
+        </g>
+    </g>
+</svg>
