@@ -60,70 +60,91 @@ class ContentDetector {
       '业务需求'
     ];
 
-    this.attachmentSelectors = [
-      // Basic file type selectors
-      'a[href*=".pdf"]',
-      'a[href*=".docx"]',
-      'a[href*=".doc"]',
-      'a[href*=".xlsx"]',
-      'a[href*=".pptx"]',
-      'a[href$=".pdf"]',
-      'a[href$=".docx"]',
-      'a[href$=".doc"]',
-      'a[href$=".xlsx"]',
-      'a[href$=".pptx"]',
-      'a[href$=".txt"]',
-      'a[href$=".zip"]',
-      'a[href$=".rar"]',
-
-      // Download-related selectors
-      'a[download]',
-      'a[href*="download"]',
-      'a[title*="下载"]',
-      'a[title*="Download"]',
-      'button[onclick*="download"]',
-      'a[title*="附件"]',
-      'a[title*="文件"]',
-      'a[aria-label*="下载"]',
-      'a[aria-label*="附件"]',
-
-      // Platform-specific selectors
-      '.attachment-link',
-      '.file-link',
-      '.download-link',
-      '[data-file-type]',
-      '[data-attachment]',
-
-      // PingCode specific
-      '.file-item a',
-      '.attachment-item a',
-      '.document-link',
-      '[class*="attachment"]',
-      '[class*="file"]',
-      '[class*="document"]',
-      'a[href*="atlas.pingcode.com"]',
-      'a[href*="/api/download/"]',
-      '.attachment-list a',
-      '[class*="attachment"] a',
-
-      // Coding.net specific
-      '.files-table a',
-      '.file-entry a',
-      '.issue-attachments a',
-      'a[href*="/attachments/"]',
-      'a[href*="/files/"]',
-      '.requirement-attachments a',
-      '.issue-content a[href*="download"]',
-      '[class*="upload"] a',
-      '[class*="attach"] a',
-
-      // Jira/Confluence specific
-      '.attachment-list a',
-      '.attachments a',
-      '.file-list a',
-      'a[href*="attachment"]',
-      'a[href*="downloadFile"]'
-    ];
+    this.attachmentSelectors = {
+      // Group: Direct Indicators (High weight)
+      direct: {
+        weight: 10,
+        selectors: [
+          'a[download]',
+          'a[data-attachment]',
+          'a[href*="downloadFile"]',
+          'a[href*="/api/download/"]',
+          'a[href*="/attachments/"]',
+          'a.attachment-link',
+          'a.file-link',
+          'a.download-link'
+        ]
+      },
+      // Group: File Extensions (High weight)
+      fileExtensions: {
+        weight: 9,
+        selectors: [
+          'a[href$=".pdf"]',
+          'a[href$=".docx"]',
+          'a[href$=".doc"]',
+          'a[href$=".xlsx"]',
+          'a[href$=".pptx"]',
+          'a[href$=".zip"]',
+          'a[href$=".rar"]',
+          'a[href$=".txt"]'
+        ]
+      },
+      // Group: Platform Specific (Medium to High weight)
+      platform: {
+        weight: 8,
+        selectors: [
+          // PingCode
+          '.file-item a',
+          '.attachment-item a',
+          'a[href*="atlas.pingcode.com"]',
+          // Coding.net
+          '.files-table a',
+          '.file-entry a',
+          '.issue-attachments a',
+          '.requirement-attachments a',
+          // Jira/Confluence
+          '.attachment-list a',
+          '.attachments a',
+          '.file-list a'
+        ]
+      },
+      // Group: Keywords in attributes (Medium weight)
+      keywords: {
+        weight: 5,
+        selectors: [
+          'a[title*="下载"]',
+          'a[title*="Download"]',
+          'a[title*="附件"]',
+          'a[title*="文件"]',
+          'a[aria-label*="下载"]',
+          'a[aria-label*="附件"]',
+          'a[href*="download"]',
+          'a[href*="attachment"]'
+        ]
+      },
+      // Group: Generic class names (Low weight, high chance of false positives)
+      genericClasses: {
+        weight: 2,
+        selectors: [
+          'a[class*="attachment"]',
+          'a[class*="file"]',
+          'a[class*="document"]',
+          'a[class*="upload"]',
+          'a[class*="attach"]'
+        ]
+      },
+      // Group: Speculative (Very low weight)
+      speculative: {
+        weight: 1,
+        selectors: [
+          'a[href*=".pdf"]', // Non-exact match
+          'a[href*=".docx"]',
+          'a[href*=".doc"]',
+          'a[href*=".xlsx"]',
+          'a[href*=".pptx"]'
+        ]
+      }
+    };
 
     this.cache = new Map();
     this.cacheExpiryTime = 30 * 60 * 1000; // 30 minutes
@@ -221,31 +242,67 @@ class ContentDetector {
     const processedUrls = new Set();
 
     try {
-      for (const selector of this.attachmentSelectors) {
-        try {
-          const elements = document.querySelectorAll(selector);
-          Logger.debug(`Selector "${selector}" found ${elements.length} elements`);
+      for (const groupName in this.attachmentSelectors) {
+        const group = this.attachmentSelectors[groupName];
+        const { weight, selectors } = group;
 
-          elements.forEach(element => {
-            try {
-              const attachment = this.parseAttachmentElement(element);
-              if (attachment && !processedUrls.has(attachment.url)) {
-                attachments.push(attachment);
-                processedUrls.add(attachment.url);
-              }
-            } catch (parseError) {
-              Logger.debug('Failed to parse attachment element:', parseError);
+        for (const selector of selectors) {
+          try {
+            const elements = document.querySelectorAll(selector);
+            if (elements.length > 0) {
+              Logger.debug(
+                `Selector "${selector}" (group: ${groupName}, weight: ${weight}) found ${elements.length} elements`
+              );
             }
-          });
-        } catch (selectorError) {
-          Logger.debug(`Selector "${selector}" failed:`, selectorError);
+
+            elements.forEach(element => {
+              try {
+                const sourceInfo = { selector, group: groupName, weight };
+                const attachment = this.parseAttachmentElement(element, sourceInfo);
+
+                if (attachment && !processedUrls.has(attachment.url)) {
+                  attachments.push(attachment);
+                  processedUrls.add(attachment.url);
+                  Logger.debug('New attachment detected:', {
+                    name: attachment.name,
+                    score: attachment.relevanceScore,
+                    selector: attachment.sourceSelector
+                  });
+                } else if (attachment && processedUrls.has(attachment.url)) {
+                  const existing = attachments.find(a => a.url === attachment.url);
+                  if (existing && attachment.relevanceScore > existing.relevanceScore) {
+                    Logger.debug(
+                      `Updating attachment with higher score: ${attachment.name}`,
+                      {
+                        old_score: existing.relevanceScore,
+                        new_score: attachment.relevanceScore,
+                        selector: attachment.sourceSelector
+                      }
+                    );
+                    existing.relevanceScore = attachment.relevanceScore;
+                    existing.sourceSelector = attachment.sourceSelector;
+                  }
+                }
+              } catch (parseError) {
+                Logger.debug('Failed to parse attachment element:', parseError);
+              }
+            });
+          } catch (selectorError) {
+            Logger.debug(`Selector "${selector}" failed:`, selectorError);
+          }
         }
       }
 
       // Sort attachments by relevance
       attachments.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
 
-      Logger.info(`Found ${attachments.length} unique attachments`);
+      Logger.info(`Found ${attachments.length} unique attachments.`);
+      if (attachments.length > 0) {
+        Logger.debug(
+          'Final sorted attachments list:',
+          attachments.map(a => ({ name: a.name, score: a.relevanceScore, url: a.url }))
+        );
+      }
       return attachments;
     } catch (error) {
       Logger.error('Attachment detection failed:', error);
@@ -258,7 +315,7 @@ class ContentDetector {
   /**
    * Parse attachment element to extract information
    */
-  parseAttachmentElement(element) {
+  parseAttachmentElement(element, sourceInfo) {
     try {
       const url = element.href || element.getAttribute('href');
       if (!url) return null;
@@ -267,7 +324,7 @@ class ContentDetector {
       const fileType = this.getFileType(url, name);
       const size = this.extractFileSize(element);
       const lastModified = this.extractLastModified(element);
-      const relevanceScore = this.calculateRelevanceScore(name, url, element);
+      const relevanceScore = this.calculateRelevanceScore(name, url, element, sourceInfo);
 
       return {
         name,
@@ -276,6 +333,7 @@ class ContentDetector {
         size,
         lastModified,
         relevanceScore,
+        sourceSelector: `${sourceInfo.group} > "${sourceInfo.selector}"`,
         element: {
           tagName: element.tagName,
           className: element.className,
@@ -318,13 +376,32 @@ class ContentDetector {
    * Extract name from URL
    */
   extractNameFromUrl(url) {
+    if (!url) return null;
     try {
-      const urlObj = new URL(url);
+      // Using window.location.origin as a base for relative URLs
+      const absoluteUrl = new URL(url, window.location.origin).href;
+      // Decode the URL to handle encoded characters like %20
+      const decodedUrl = decodeURIComponent(absoluteUrl);
+      const urlObj = new URL(decodedUrl);
+
+      // Look for a 'filename' or 'file' parameter in the query string
+      const filenameFromQuery =
+        urlObj.searchParams.get('filename') || urlObj.searchParams.get('file');
+      if (filenameFromQuery) {
+        return filenameFromQuery;
+      }
+
+      // Extract from path
       const pathname = urlObj.pathname;
-      const filename = pathname.split('/').pop();
-      return filename || 'unknown';
+      // Remove trailing slashes and then get the last part
+      const filenameFromPath = pathname.replace(/\/$/, '').split('/').pop();
+
+      // Return the filename from path if it seems valid
+      return filenameFromPath || null;
     } catch (error) {
-      return 'unknown';
+      // If URL parsing fails, fall back to a simpler regex approach
+      const match = url.match(/[^/\\?#]+(?=([?#]|$))/);
+      return match ? decodeURIComponent(match[0]) : null;
     }
   }
 
@@ -333,7 +410,29 @@ class ContentDetector {
    */
   cleanAttachmentName(name) {
     if (!name) return '';
-    return name.replace(/[^\w\s\u4e00-\u9fff.-]/g, '').trim();
+
+    // Use a textarea to decode HTML entities (e.g., &amp; -> &)
+    const textArea = document.createElement('textarea');
+    textArea.innerHTML = name;
+    let cleaned = textArea.value;
+
+    // Remove file size info often included in the text (e.g., "My Document.pdf (1.2MB)")
+    cleaned = cleaned.replace(/\s*\([\d.]+\s*(kb|mb|gb|bytes?)\)$/i, '');
+
+    // Remove common non-filename text
+    cleaned = cleaned.replace(/^(下载|附件|文件)\s*[:：]?\s*/, '');
+
+    // Normalize whitespace and remove characters that are unlikely to be in a filename.
+    // Keeps letters, numbers, CJK chars, and common filename characters: . _ - ( ) [ ]
+    cleaned = cleaned.replace(/[^\w\s\u4e00-\u9fff._()\[\]-]/g, ' ').trim();
+
+    // Collapse multiple spaces into a single space
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+    // Fix common pattern: "file name . ext" -> "file name.ext"
+    cleaned = cleaned.replace(/\s+\./g, '.');
+
+    return cleaned;
   }
 
   /**
@@ -427,9 +526,42 @@ class ContentDetector {
   /**
    * Calculate relevance score for attachment
    */
-  calculateRelevanceScore(name, url, element) {
-    let score = 0;
-    const text = `${name} ${url} ${element.textContent || ''}`.toLowerCase();
+  calculateRelevanceScore(name, url, element, sourceInfo) {
+    // Start with a base score from the selector's weight.
+    let score = sourceInfo.weight * 10;
+
+    // Boost score for specific keywords in link text or title.
+    const linkText = (element.textContent || '').toLowerCase();
+    const titleText = (element.title || '').toLowerCase();
+    const keywords = ['附件', '下载', 'download', 'attachment', 'file'];
+
+    for (const keyword of keywords) {
+      if (linkText.includes(keyword) || titleText.includes(keyword)) {
+        score += 20; // Add a significant boost if keywords are found.
+        break;
+      }
+    }
+
+    // Boost for known file extensions in the URL.
+    const fileExtensions = ['.pdf', '.docx', '.doc', '.xlsx', '.pptx', '.zip', '.rar'];
+    for (const ext of fileExtensions) {
+      if (url.toLowerCase().endsWith(ext)) {
+        score += 30; // Strong indicator of a file download.
+        break;
+      }
+    }
+
+    // Penalize if it's likely just a page navigation link.
+    if (element.href && element.href.startsWith('#')) {
+      score -= 50;
+    }
+
+    // Penalize for very long and complex URLs that might be API calls, not direct downloads.
+    if (url.length > 250) {
+      score -= 10;
+    }
+
+    return Math.max(0, score); // Ensure score is not negative.
 
     // Check for PRD keywords
     for (const keyword of this.prdKeywords) {
