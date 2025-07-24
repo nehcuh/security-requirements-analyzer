@@ -4,27 +4,60 @@
   "version": "1.0.0",
   "description": "自动解析产品需求文档并生成安全测试用例",
   "permissions": ["activeTab", "storage", "scripting", "downloads", "tabs"],
-  "host_permissions": ["https://*/*", "http://127.0.0.1/*"],
+  "host_permissions": [
+    "https://pingcode.com/*",
+    "https://*.pingcode.com/*",
+    "https://jira.atlassian.com/*",
+    "https://*.atlassian.net/*",
+    "https://confluence.atlassian.com/*",
+    "https://coding.net/*",
+    "https://*.coding.net/*",
+    "http://127.0.0.1/*",
+    "http://localhost:*/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; style-src 'self' 'unsafe-inline'; connect-src 'self' https: http://127.0.0.1:* http://localhost:*; img-src 'self' data: https:;"
+  },
   "background": {
-    "service_worker": "src/background/background-simple.js"
+    "service_worker": "src/background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content/content-simple.js"],
+      "matches": [
+        "https://pingcode.com/*",
+        "https://*.pingcode.com/*",
+        "https://jira.atlassian.com/*",
+        "https://*.atlassian.net/*",
+        "https://confluence.atlassian.com/*",
+        "https://coding.net/*",
+        "https://*.coding.net/*"
+      ],
+      "js": ["src/content/content-script.js"],
       "run_at": "document_idle",
       "all_frames": false
     }
   ],
   "action": {
-    "default_popup": "src/popup/popup.html",
+    "default_popup": "src/ui/popup/popup.html",
     "default_title": "安全需求分析"
   },
-  "options_page": "src/config/config.html",
+  "options_page": "src/ui/config/config.html",
   "web_accessible_resources": [
     {
-      "resources": ["libs/*", "assets/*", "*.js", "*.html"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "libs/pdf.min.js",
+        "libs/mammoth.browser.min.js",
+        "assets/STAC知识库.json"
+      ],
+      "matches": [
+        "https://pingcode.com/*",
+        "https://*.pingcode.com/*",
+        "https://jira.atlassian.com/*",
+        "https://*.atlassian.net/*",
+        "https://confluence.atlassian.com/*",
+        "https://coding.net/*",
+        "https://*.coding.net/*"
+      ]
     }
   ]
 }

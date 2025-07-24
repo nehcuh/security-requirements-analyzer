@@ -5,10 +5,13 @@
   "main": "src/background/background-simple.js",
   "scripts": {
     "dev": "node tools/debug/debug-launcher.js",
-    "build": "echo 'Build script not implemented yet'",
+    "build": "./build.sh",
     "debug": "node tools/debug/debug-launcher.js",
     "debug:info": "node tools/debug/debug-launcher.js --info",
-    "lint": "echo 'Linting not configured yet'",
+    "lint": "eslint src/ --ext .js --fix",
+    "lint:check": "eslint src/ --ext .js",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -23,7 +26,8 @@
     "install:dev": "echo 'Development dependencies not required for Chrome extension'",
     "start-server": "http-server -p 8080 > /dev/null 2>&1 &",
     "stop-server": "pkill -f http-server",
-    "test:custom": "npm run start-server && sleep 2 && node tests/custom-e2e-test.js; npm run stop-server"
+    "test:custom": "npm run start-server && sleep 2 && node tests/custom-e2e-test.js; npm run stop-server",
+    "pre-commit": "npm run lint && npm run format && npm run test"
   },
   "keywords": [
     "chrome-extension",
@@ -50,8 +54,10 @@
   },
   "devDependencies": {
     "@vitest/ui": "^1.0.0",
+    "eslint": "^8.57.1",
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
     "puppeteer": "^24.14.0",
     "vitest": "^1.0.0"
   },
