@@ -705,6 +705,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true, data: contentDetector.getSummary() });
         break;
 
+      case 'diagnostic-ping':
+        // 诊断ping请求，返回基本状态信息
+        sendResponse({
+          success: true,
+          data: {
+            status: 'active',
+            timestamp: Date.now(),
+            url: window.location.href,
+            contentDetectorActive: contentDetector.isActivated,
+            version: '1.0.0'
+          }
+        });
+        break;
+
       default:
         Logger.warn('Unknown action:', request.action);
         sendResponse({ success: false, error: 'Unknown action' });
