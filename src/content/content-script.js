@@ -172,12 +172,12 @@ class ContentDetector {
   /**
    * Detect attachments and page content
    */
-  detectContent() {
+  async detectContent() {
     const timer = Logger.timer('content-detection');
 
     try {
       const attachments = this.detectAttachments();
-      const pageText = this.extractPageText();
+      const pageText = await this.extractPageText();
 
       const result = {
         attachments: attachments || [],
@@ -451,13 +451,26 @@ class ContentDetector {
   }
 
   /**
-   * Extract page text content
+   * Extract page text content with dynamic loading support
    */
-  extractPageText() {
+  async extractPageText() {
     const timer = Logger.timer('page-text-extraction');
 
     try {
+      // Wait for dynamic content to load
+      await this.waitForContentToLoad();
+
       const contentSelectors = [
+        // Coding.net specific selectors
+        '.requirement-detail-content',
+        '.issue-content',
+        '.project-description',
+        '.requirement-description',
+        '.task-description',
+        '.issue-body',
+        '.markdown-body',
+
+        // Generic content selectors
         'main',
         '.main-content',
         '#main',
@@ -468,16 +481,20 @@ class ContentDetector {
         '.requirement-content',
         '.description',
         '.detail',
-        // Platform specific
-        '.issue-body',
-        '.requirement-detail',
         '.specification',
         '.prd-content',
-        '.document-content'
+        '.document-content',
+
+        // Requirement specific
+        '[data-testid="requirement-content"]',
+        '[class*="requirement"]',
+        '[class*="description"]',
+        '[class*="detail"]'
       ];
 
       let bestContent = '';
       let maxLength = 0;
+      let selectedSelector = null;
 
       // Try specific content selectors first
       for (const selector of contentSelectors) {
@@ -488,6 +505,7 @@ class ContentDetector {
             if (text.length > maxLength && this.isRequirementContent(text)) {
               bestContent = text;
               maxLength = text.length;
+              selectedSelector = selector;
             }
           }
         } catch (error) {
@@ -495,19 +513,106 @@ class ContentDetector {
         }
       }
 
-      // Fallback to body if no specific content found
-      if (!bestContent) {
+      // If no good content found, try to find detailed content sections
+      if (!bestContent || maxLength < 500) {
+        bestContent = await this.extractDynamicContent();
+      }
+
+      // Fallback to body if still no content found
+      if (!bestContent || bestContent.length < 100) {
         bestContent = this.extractTextFromElement(document.body);
+        selectedSelector = 'document.body (fallback)';
       }
 
       const trimmedContent = bestContent.substring(0, 50000); // Limit to 50k chars
-      Logger.info(`Extracted ${trimmedContent.length} characters of page text`);
+      Logger.info(
+        `Extracted ${trimmedContent.length} characters of page text using selector: ${selectedSelector}`
+      );
+      Logger.debug(`Content preview: ${trimmedContent.substring(0, 200)}...`);
+
       return trimmedContent;
     } catch (error) {
       Logger.error('Page text extraction failed:', error);
       return '';
     } finally {
       timer.end();
+    }
+  }
+
+  /**
+   * Wait for dynamic content to load
+   */
+  async waitForContentToLoad() {
+    return new Promise(resolve => {
+      // Wait for a short time to allow dynamic content to load
+      setTimeout(() => {
+        // Check if there are any loading indicators
+        const loadingIndicators = document.querySelectorAll(
+          '.loading, .spinner, [class*="loading"], [class*="spinner"]'
+        );
+
+        if (loadingIndicators.length === 0) {
+          resolve();
+        } else {
+          // Wait a bit more if loading indicators are present
+          setTimeout(resolve, 2000);
+        }
+      }, 1000);
+    });
+  }
+
+  /**
+   * Extract content from dynamically loaded sections
+   */
+  async extractDynamicContent() {
+    try {
+      // Look for expandable content areas
+      const expandableSelectors = [
+        '.expand-btn',
+        '.show-more',
+        '.load-more',
+        '[data-toggle="collapse"]',
+        '.collapsed',
+        '.expandable'
+      ];
+
+      for (const selector of expandableSelectors) {
+        const expandBtn = document.querySelector(selector);
+        if (expandBtn && expandBtn.offsetParent !== null) {
+          try {
+            expandBtn.click();
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (error) {
+            Logger.debug(`Failed to expand content with selector ${selector}:`, error);
+          }
+        }
+      }
+
+      // Try to find content in common requirement detail areas
+      const detailSelectors = [
+        '.requirement-body',
+        '.issue-description',
+        '.task-body',
+        '.content-body',
+        '.detail-content',
+        '.full-content'
+      ];
+
+      for (const selector of detailSelectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+          const text = this.extractTextFromElement(element);
+          if (text.length > 200 && this.isRequirementContent(text)) {
+            Logger.info(`Found dynamic content with selector: ${selector}`);
+            return text;
+          }
+        }
+      }
+
+      return '';
+    } catch (error) {
+      Logger.debug('Dynamic content extraction failed:', error);
+      return '';
     }
   }
 
@@ -532,22 +637,109 @@ class ContentDetector {
    * Check if text appears to be requirement content
    */
   isRequirementContent(text) {
-    if (!text || text.length < 100) return false;
+    if (!text || text.length < 50) return false;
 
     const lowerText = text.toLowerCase();
     let score = 0;
 
+    // PRD and requirement keywords (higher weight)
     for (const keyword of this.prdKeywords) {
-      if (lowerText.includes(keyword)) score++;
+      if (lowerText.includes(keyword)) score += 2;
     }
 
-    // Additional indicators
-    const indicators = ['功能', '需求', '用户', '系统', '接口', 'api', '流程', '业务'];
-    for (const indicator of indicators) {
+    // Functional indicators (medium weight)
+    const functionalIndicators = [
+      '功能',
+      '需求',
+      '用户',
+      '系统',
+      '接口',
+      'api',
+      '流程',
+      '业务',
+      '实现',
+      '设计',
+      '架构',
+      '模块',
+      '组件',
+      '服务',
+      '数据',
+      '安全',
+      'feature',
+      'function',
+      'requirement',
+      'user',
+      'system',
+      'design',
+      'implement',
+      'architecture',
+      'module',
+      'component',
+      'service',
+      'data'
+    ];
+    for (const indicator of functionalIndicators) {
+      if (lowerText.includes(indicator)) score += 1;
+    }
+
+    // Technical indicators (lower weight)
+    const technicalIndicators = [
+      '开发',
+      '测试',
+      '部署',
+      '配置',
+      '环境',
+      '版本',
+      '代码',
+      '文档',
+      'development',
+      'test',
+      'deploy',
+      'config',
+      'environment',
+      'version'
+    ];
+    for (const indicator of technicalIndicators) {
       if (lowerText.includes(indicator)) score += 0.5;
     }
 
-    return score >= 2;
+    // Negative indicators (reduce score for non-requirement content)
+    const negativeIndicators = [
+      '登录',
+      '注册',
+      '用户名',
+      '密码',
+      '验证码',
+      '菜单',
+      '导航',
+      'login',
+      'register',
+      'username',
+      'password',
+      'menu',
+      'navigation',
+      '404',
+      '500',
+      'error',
+      '错误',
+      '异常',
+      '失败'
+    ];
+    for (const indicator of negativeIndicators) {
+      if (lowerText.includes(indicator)) score -= 0.5;
+    }
+
+    // Boost score for longer, structured content
+    if (text.length > 1000) score += 1;
+    if (text.length > 3000) score += 1;
+
+    // Check for structured content patterns
+    if (text.includes('：') || text.includes(':')) score += 0.5;
+    if (text.includes('、') || text.includes(',')) score += 0.5;
+    if (/\d+\./.test(text)) score += 0.5; // Numbered lists
+
+    Logger.debug(`Content relevance score: ${score} for text length: ${text.length}`);
+    return score >= 1.5;
   }
 
   /**
@@ -657,9 +849,9 @@ class ContentDetector {
 const contentDetector = new ContentDetector();
 
 // Global functions for extension communication
-window.detectPageContent = () => {
+window.detectPageContent = async () => {
   Logger.info('detectPageContent called');
-  return contentDetector.detectContent();
+  return await contentDetector.detectContent();
 };
 
 window.activateContentDetector = () => {
@@ -680,13 +872,13 @@ window.debugPageStructure = () => {
 };
 
 // Message listener for extension communication
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   Logger.debug('Message received:', request);
 
   try {
     switch (request.action) {
       case 'detectContent':
-        const result = contentDetector.detectContent();
+        const result = await contentDetector.detectContent();
         sendResponse({ success: true, data: result });
         break;
 

@@ -88,7 +88,7 @@ class SecurityAnalysisService {
 
   async initUtils() {
     try {
-      this.utils = await import('../shared/utils.js');
+      this.utils = await import('../utils/utils.js');
     } catch (error) {
       console.warn('Utils initialization failed:', error);
       // 创建基础工具函数回退
@@ -114,7 +114,7 @@ class SecurityAnalysisService {
   async initSTACService() {
     try {
       // 动态导入STAC服务
-      const { STACService } = await import('./stac-service.js');
+      const { STACService } = await import('../core/analysis/stac-service.js');
       this.stacService = new STACService();
       await this.stacService.loadKnowledgeBase();
     } catch (error) {
@@ -126,7 +126,7 @@ class SecurityAnalysisService {
   async initDocumentParser() {
     try {
       // 使用简化的文档解析器
-      const { DocumentParser } = await import('./simple-document-parser.js');
+      const { DocumentParser } = await import('../core/detection/document-parser.js');
       this.documentParser = new DocumentParser();
       await this.documentParser.init();
       console.log('Simple document parser initialized successfully');
@@ -139,7 +139,7 @@ class SecurityAnalysisService {
   async initInputValidator() {
     try {
       // 动态导入输入验证器
-      const { InputValidator } = await import('../shared/input-validator.js');
+      const { InputValidator } = await import('../utils/validator.js');
       this.inputValidator = new InputValidator();
     } catch (error) {
       console.warn('Input validator initialization failed:', error);
