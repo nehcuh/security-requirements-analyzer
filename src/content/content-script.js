@@ -846,7 +846,9 @@ class ContentDetector {
 }
 
 // Initialize content detector
+console.log('🔧 初始化 ContentDetector...');
 const contentDetector = new ContentDetector();
+console.log('✅ ContentDetector 初始化完成:', contentDetector);
 
 // Global functions for extension communication
 window.detectPageContent = async () => {
@@ -872,53 +874,87 @@ window.debugPageStructure = () => {
 };
 
 // Message listener for extension communication
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('📨 Content Script 收到消息:', request);
   Logger.debug('Message received:', request);
 
-  try {
-    switch (request.action) {
-      case 'detectContent':
-        const result = await contentDetector.detectContent();
-        sendResponse({ success: true, data: result });
-        break;
-
-      case 'activateDetector':
-        contentDetector.activate();
-        sendResponse({ success: true, data: contentDetector.getSummary() });
-        break;
-
-      case 'testConnection':
-        const testResult = contentDetector.testConnection();
-        sendResponse({ success: true, data: testResult });
-        break;
-
-      case 'debugPage':
-        contentDetector.debugPageStructure();
-        sendResponse({ success: true, data: contentDetector.getSummary() });
-        break;
-
-      case 'diagnostic-ping':
-        // 诊断ping请求，返回基本状态信息
-        sendResponse({
-          success: true,
-          data: {
-            status: 'active',
-            timestamp: Date.now(),
-            url: window.location.href,
-            contentDetectorActive: contentDetector.isActivated,
-            version: '1.0.0'
-          }
-        });
-        break;
-
-      default:
-        Logger.warn('Unknown action:', request.action);
-        sendResponse({ success: false, error: 'Unknown action' });
-    }
-  } catch (error) {
-    Logger.error('Message handling failed:', error);
-    sendResponse({ success: false, error: error.message });
+  // 确保全局对象始终可用
+  if (!window.ContentDetector) {
+    console.log('🔧 强制暴露 ContentDetector 到全局');
+    window.ContentDetector = ContentDetector;
+    window.contentDetector = contentDetector;
   }
+
+  const handleMessage = async () => {
+    try {
+      switch (request.action) {
+        case 'detectContent':
+          console.log('🔍 开始执行 detectContent...');
+          const result = await contentDetector.detectContent();
+          console.log('✅ detectContent 完成:', result);
+          const response = { success: true, data: result };
+          console.log('📤 Content Script 发送响应:', response);
+          return response;
+
+        case 'activateDetector':
+          contentDetector.activate();
+          const activateResponse = { success: true, data: contentDetector.getSummary() };
+          console.log('📤 activateDetector 响应:', activateResponse);
+          return activateResponse;
+
+        case 'testConnection':
+          const testResult = contentDetector.testConnection();
+          const testResponse = { success: true, data: testResult };
+          console.log('📤 testConnection 响应:', testResponse);
+          return testResponse;
+
+        case 'debugPage':
+          contentDetector.debugPageStructure();
+          const debugResponse = { success: true, data: contentDetector.getSummary() };
+          console.log('📤 debugPage 响应:', debugResponse);
+          return debugResponse;
+
+        case 'diagnostic-ping':
+          // 诊断ping请求，返回基本状态信息
+          console.log('💓 响应 diagnostic-ping');
+          const pingResponse = {
+            success: true,
+            data: {
+              status: 'active',
+              timestamp: Date.now(),
+              url: window.location.href,
+              contentDetectorActive: contentDetector?.isActivated || false,
+              version: '1.0.0',
+              globalObjects: {
+                ContentDetector: typeof window.ContentDetector,
+                contentDetector: typeof window.contentDetector
+              }
+            }
+          };
+          console.log('💓 ping 响应内容:', pingResponse);
+          return pingResponse;
+
+        default:
+          Logger.warn('Unknown action:', request.action);
+          const unknownResponse = { success: false, error: 'Unknown action' };
+          console.log('📤 Unknown action 响应:', unknownResponse);
+          return unknownResponse;
+      }
+    } catch (error) {
+      Logger.error('Message handling failed:', error);
+      const errorResponse = { success: false, error: error.message };
+      console.error('📤 Error 响应:', errorResponse);
+      return errorResponse;
+    }
+  };
+
+  // 使用 Promise 方式处理异步响应
+  handleMessage()
+    .then(sendResponse)
+    .catch(error => {
+      console.error('❌ 消息处理异常:', error);
+      sendResponse({ success: false, error: error.message });
+    });
 
   return true; // Keep message channel open for async response
 });
@@ -937,7 +973,30 @@ if (document.readyState === 'loading') {
 }
 
 // Export for debugging
-window.ContentDetector = ContentDetector;
-window.contentDetector = contentDetector;
+console.log('🌐 暴露到全局对象...');
+try {
+  window.ContentDetector = ContentDetector;
+  window.contentDetector = contentDetector;
+  console.log('✅ 全局对象暴露成功');
+} catch (error) {
+  console.error('❌ 全局对象暴露失败:', error);
+}
+
+// 验证暴露是否成功
+setTimeout(() => {
+  console.log('🔍 验证全局对象:', {
+    ContentDetector: window.ContentDetector,
+    contentDetector: window.contentDetector,
+    isFunction: typeof window.ContentDetector === 'function',
+    isObject: typeof window.contentDetector === 'object'
+  });
+
+  // 如果验证失败，再次尝试暴露
+  if (!window.ContentDetector || !window.contentDetector) {
+    console.warn('⚠️ 全局对象验证失败，重新暴露...');
+    window.ContentDetector = ContentDetector;
+    window.contentDetector = contentDetector;
+  }
+}, 100);
 
 Logger.info('Content script loaded successfully');

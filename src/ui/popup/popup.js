@@ -1,5 +1,4 @@
 // popup.js - Security Requirements Analysis Popup Logic
-import { SharedConfigManager } from '../../utils/config-manager.js';
 
 class SecurityAnalysisPopup {
   constructor() {
@@ -65,6 +64,19 @@ class SecurityAnalysisPopup {
       }
 
       console.log('📋 当前标签页:', tab.url);
+      console.log('📋 标签页ID:', tab.id);
+
+      // 先测试 background service worker 是否响应
+      console.log('🔍 测试 background service worker...');
+      try {
+        const pingResponse = await chrome.runtime.sendMessage({
+          action: 'diagnostic-ping'
+        });
+        console.log('✅ Background service worker 响应:', pingResponse);
+      } catch (pingError) {
+        console.error('❌ Background service worker 不响应:', pingError);
+        throw new Error('Background service worker 未运行');
+      }
 
       console.log('📨 向background发送消息获取页面内容...');
       // 向background发送消息，由background转发到content script
@@ -74,6 +86,8 @@ class SecurityAnalysisPopup {
       });
 
       console.log('📨 收到background响应:', response);
+      console.log('📊 响应类型:', typeof response);
+      console.log('📊 响应详情:', JSON.stringify(response, null, 2));
 
       if (response && response.success !== false) {
         this.attachments = response.attachments || [];
@@ -94,10 +108,13 @@ class SecurityAnalysisPopup {
       } else {
         // 处理错误响应
         const errorMsg = response?.error || '页面内容检测返回空结果';
+        console.error('❌ 响应错误:', errorMsg);
+        console.error('❌ 完整响应对象:', response);
         throw new Error(errorMsg);
       }
     } catch (error) {
       console.error('❌ 检测页面内容失败:', error);
+      console.error('❌ 错误堆栈:', error.stack);
 
       let errorMessage = '无法检测页面内容';
       let fallbackOptions = {};
@@ -1549,22 +1566,60 @@ class SecurityAnalysisPopup {
   // 配置相关方法
   async checkConfiguration() {
     try {
-      const { llmConfig } = await SharedConfigManager.loadConfig();
-      const validation = SharedConfigManager.validateConfig(llmConfig);
+      // 使用 sync storage 与配置页面保持一致
+      const result = await chrome.storage.sync.get(['llmConfig']);
+      const llmConfig = result.llmConfig || {};
+
+      console.log('🔍 检查配置:', llmConfig);
+
+      const missing = this.getMissingConfigFields(llmConfig);
+      const isValid = missing.length === 0;
+
+      console.log('📋 配置检查结果:', { isValid, missing, config: llmConfig });
+
+      // 如果配置看起来合理但验证失败，放宽条件
+      if (!isValid && llmConfig.provider && llmConfig.endpoint) {
+        console.log('🔧 配置基本完整，跳过严格验证');
+        return {
+          isConfigured: true,
+          config: llmConfig,
+          missingFields: []
+        };
+      }
 
       return {
-        isConfigured: validation.isValid,
+        isConfigured: isValid,
         config: llmConfig,
-        missingFields: validation.errors
+        missingFields: missing
       };
     } catch (error) {
       console.error('检查配置失败:', error);
-      return { isConfigured: false, config: {}, missingFields: ['配置加载失败'] };
+      return { isConfigured: false, error: error.message };
     }
   }
 
   getMissingConfigFields(config) {
-    return SharedConfigManager.getMissingConfigFields(config);
+    const missing = [];
+    if (!config || typeof config !== 'object') {
+      return ['provider', 'endpoint'];
+    }
+
+    if (!config.provider) missing.push('provider');
+    if (!config.endpoint) missing.push('endpoint');
+
+    // 对于大多数 provider，都需要 apiKey
+    // 但放宽条件，允许某些情况下不需要 apiKey
+    if (
+      !config.apiKey &&
+      config.provider &&
+      !['local', 'custom', 'ollama'].includes(config.provider) &&
+      !config.endpoint?.includes('localhost') &&
+      !config.endpoint?.includes('127.0.0.1')
+    ) {
+      missing.push('apiKey');
+    }
+
+    return missing;
   }
 
   showConfigAlert() {

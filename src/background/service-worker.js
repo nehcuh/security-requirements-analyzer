@@ -34,7 +34,10 @@ class SecurityAnalysisService {
   async init() {
     // 监听来自popup的消息
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      this.handleMessage(request, sender, sendResponse);
+      this.handleMessage(request, sender, sendResponse).catch(error => {
+        console.error('消息处理异常:', error);
+        sendResponse({ success: false, error: error.message });
+      });
       return true; // 保持异步响应通道开放
     });
 
@@ -112,39 +115,25 @@ class SecurityAnalysisService {
   }
 
   async initSTACService() {
-    try {
-      // 动态导入STAC服务
-      const { STACService } = await import('../core/analysis/stac-service.js');
-      this.stacService = new STACService();
-      await this.stacService.loadKnowledgeBase();
-    } catch (error) {
-      console.warn('STAC service initialization failed:', error);
-      this.stacService = null;
-    }
+    // Service Worker 不支持动态导入，跳过 STAC 服务初始化
+    console.log('STAC service initialization skipped (not supported in Service Worker)');
+    this.stacService = null;
   }
 
   async initDocumentParser() {
-    try {
-      // 使用简化的文档解析器
-      const { DocumentParser } = await import('../core/detection/document-parser.js');
-      this.documentParser = new DocumentParser();
-      await this.documentParser.init();
-      console.log('Simple document parser initialized successfully');
-    } catch (error) {
-      console.warn('Simple document parser initialization failed:', error);
-      this.documentParser = null;
-    }
+    // Service Worker 不支持动态导入，跳过文档解析器初始化
+    console.log(
+      'Document parser initialization skipped (not supported in Service Worker)'
+    );
+    this.documentParser = null;
   }
 
   async initInputValidator() {
-    try {
-      // 动态导入输入验证器
-      const { InputValidator } = await import('../utils/validator.js');
-      this.inputValidator = new InputValidator();
-    } catch (error) {
-      console.warn('Input validator initialization failed:', error);
-      this.inputValidator = null;
-    }
+    // Service Worker 不支持动态导入，跳过输入验证器初始化
+    console.log(
+      'Input validator initialization skipped (not supported in Service Worker)'
+    );
+    this.inputValidator = null;
   }
 
   async ensureContentScriptInjected(tabId, url) {
@@ -157,31 +146,76 @@ class SecurityAnalysisService {
 
       // 跳过chrome://和extension://页面
       if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) {
+        console.log('⏭️ 跳过系统页面:', url);
         return;
       }
 
       console.log('🔍 检查content script是否已注入，URL:', url);
+      console.log('🔍 检查域名是否匹配manifest配置...');
+
+      // 检查URL是否匹配manifest中的patterns
+      const supportedPatterns = [
+        'https://pingcode.com/',
+        'https://*.pingcode.com/',
+        'https://jira.atlassian.com/',
+        'https://*.atlassian.net/',
+        'https://confluence.atlassian.com/',
+        'https://coding.net/',
+        'https://*.coding.net/'
+      ];
+
+      const isSupported = supportedPatterns.some(pattern => {
+        const regex = new RegExp(
+          pattern.replace(/\*/g, '[^/]*').replace(/\//g, '\\/') + '.*'
+        );
+        return regex.test(url);
+      });
+
+      if (!isSupported) {
+        console.warn('⚠️ 当前页面域名不在支持列表中:', url);
+        console.warn('📋 支持的域名模式:', supportedPatterns);
+      }
 
       // 测试Content Script是否已经注入
       try {
-        await chrome.tabs.sendMessage(tabId, { action: 'diagnostic-ping' });
-        console.log('✅ Content Script已存在');
-        // 如果没有抛出异常，说明Content Script已经存在
+        const response = await chrome.tabs.sendMessage(tabId, {
+          action: 'diagnostic-ping'
+        });
+        console.log('✅ Content Script已存在，响应:', response);
         return;
       } catch (error) {
-        // Content Script不存在，需要注入
-        console.log('❌ Content Script不存在，正在注入...', url);
+        console.log('❌ Content Script不存在，正在注入...', error.message);
       }
 
       // 注入Content Script
+      console.log('💉 开始注入content script到tabId:', tabId);
       await chrome.scripting.executeScript({
         target: { tabId: tabId },
-        files: ['src/content/content-simple.js']
+        files: ['src/content/content-script.js']
       });
 
       console.log('✅ Content Script注入成功:', url);
+
+      // 再次测试注入是否成功
+      setTimeout(async () => {
+        try {
+          const testResponse = await chrome.tabs.sendMessage(tabId, {
+            action: 'diagnostic-ping'
+          });
+          console.log('✅ 注入后测试成功:', testResponse);
+        } catch (testError) {
+          console.error('❌ 注入后测试失败:', testError);
+        }
+      }, 1000);
     } catch (error) {
       console.error('❌ Content Script注入失败:', error);
+      console.error('🔍 错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        tabId: tabId,
+        url: url
+      });
+      throw error; // 重新抛出错误供上层处理
     }
   }
 
@@ -232,25 +266,41 @@ class SecurityAnalysisService {
   }
 
   async handleMessage(request, sender, sendResponse) {
+    console.log('📨 Background 收到消息:', request.action);
+
     try {
       // Handle diagnostic ping without validation for debugging
       if (request.action === 'diagnostic-ping') {
-        sendResponse({
+        const response = {
           success: true,
           message: 'Background service is active',
           timestamp: this.utils?.formatTimestamp
             ? this.utils.formatTimestamp(Date.now())
             : new Date().toISOString(),
           receivedTimestamp: request.timestamp
-        });
+        };
+        console.log('📤 Background 响应 ping:', response);
+        sendResponse(response);
         return;
       }
 
       switch (request.action) {
         case 'detectContent':
-          // 转发到content script进行页面内容检测
-          const contentResult = await this.forwardToContentScript(request);
-          sendResponse(contentResult);
+          console.log('🔍 Background 处理 detectContent 请求');
+          try {
+            // 转发到content script进行页面内容检测
+            const contentResult = await this.forwardToContentScript(request);
+            console.log('📤 Background 发送响应:', contentResult);
+            sendResponse(contentResult);
+          } catch (forwardError) {
+            console.error('❌ 转发失败:', forwardError);
+            sendResponse({
+              success: false,
+              error: forwardError.message,
+              attachments: [],
+              pageText: ''
+            });
+          }
           break;
 
         case 'analyzeContent':
@@ -274,18 +324,20 @@ class SecurityAnalysisService {
           break;
 
         default:
+          console.warn('⚠️ 未知操作:', request.action);
           sendResponse({ success: false, error: '未知操作' });
       }
     } catch (error) {
-      console.error('处理消息失败:', error);
+      console.error('❌ 处理消息失败:', error);
       sendResponse({ success: false, error: error.message });
     }
   }
 
   async forwardToContentScript(request) {
-    try {
-      let tabId = request.tabId;
+    let tabId = request.tabId;
+    let url = null;
 
+    try {
       // 如果没有提供tabId，获取当前活动标签页
       if (!tabId) {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -293,34 +345,60 @@ class SecurityAnalysisService {
           throw new Error('无法获取当前标签页');
         }
         tabId = tab.id;
+        url = tab.url;
       }
 
       console.log('🔄 Background转发消息到content script，tabId:', tabId);
+      console.log('📨 转发的消息内容:', { action: request.action, data: request.data });
 
       // 确保content script已注入
       await this.ensureContentScriptInjected(tabId, null);
 
+      // 添加超时处理
+      const timeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Content script response timeout')), 10000);
+      });
+
       // 转发消息到content script
-      const response = await chrome.tabs.sendMessage(tabId, {
+      const messagePromise = chrome.tabs.sendMessage(tabId, {
         action: request.action,
         data: request.data
       });
 
+      const response = await Promise.race([messagePromise, timeout]);
+
       console.log('✅ Content script响应:', response);
+      console.log('📊 响应类型检查:', {
+        responseType: typeof response,
+        hasSuccess: response && 'success' in response,
+        hasData: response && 'data' in response,
+        successValue: response?.success
+      });
 
       // 如果content script返回了正确的结构，直接返回其数据
-      if (response && response.success && response.data) {
-        return {
+      if (response && response.success !== false) {
+        const result = {
           success: true,
-          attachments: response.data.attachments || [],
-          pageText: response.data.pageText || '',
-          ...response.data
+          attachments: response.data?.attachments || [],
+          pageText: response.data?.pageText || '',
+          url: response.data?.url || '',
+          title: response.data?.title || '',
+          timestamp: response.data?.timestamp || Date.now()
         };
+        console.log('📤 Background 最终返回:', result);
+        return result;
       }
 
+      console.warn('⚠️ Content script 响应格式异常:', response);
       return response || { success: false, error: 'No response from content script' };
     } catch (error) {
       console.error('❌ 转发到content script失败:', error);
+      console.error('❌ 错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        tabId: tabId || 'unknown',
+        url: url || 'unknown'
+      });
       return {
         success: false,
         error: error.message,
