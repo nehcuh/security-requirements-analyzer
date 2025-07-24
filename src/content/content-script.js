@@ -97,11 +97,7 @@ class ContentDetector {
           '.file-item a',
           '.attachment-item a',
           'a[href*="atlas.pingcode.com"]',
-          // Coding.net
-          '.files-table a',
-          '.file-entry a',
-          '.issue-attachments a',
-          '.requirement-attachments a',
+
           // Jira/Confluence
           '.attachment-list a',
           '.attachments a',
@@ -234,14 +230,75 @@ class ContentDetector {
   }
 
   /**
+   * Custom attachment detection for Coding.net
+   * @private
+   */
+  _detectCodingNetAttachments() {
+    const attachments = [];
+    const processedUrls = new Set();
+    const elements = document.querySelectorAll('div.attachments-item-wrapper-3W8snySeRJ');
+
+    Logger.debug(`[Coding.net] Found ${elements.length} potential attachment elements.`);
+
+    elements.forEach(element => {
+      try {
+        const path = element.dataset.src;
+        if (!path) return;
+
+        const url = new URL(path, window.location.origin).href;
+        if (processedUrls.has(url)) return;
+
+        const nameElement = element.querySelector('.attachments-item-title-1A7CPhKa6O');
+        const sizeElement = element.querySelector('.attachments-item-size-2HWd4zAdEG');
+
+        const name = nameElement
+          ? nameElement.textContent.trim()
+          : this.extractNameFromUrl(url);
+        const size = sizeElement ? sizeElement.textContent.trim() : null;
+        const fileType = this.getFileType(url, name);
+
+        const relevanceScore = 200; // High score for specific detector
+
+        attachments.push({
+          name: this.cleanAttachmentName(name),
+          url,
+          type: fileType,
+          size,
+          lastModified: null,
+          relevanceScore,
+          sourceSelector: 'coding.net-custom',
+          element: {
+            tagName: element.tagName,
+            className: element.className,
+            id: element.id
+          }
+        });
+        processedUrls.add(url);
+      } catch (error) {
+        Logger.debug('[Coding.net] Failed to parse attachment element:', error);
+      }
+    });
+
+    return attachments;
+  }
+
+  /**
    * Detect attachments on the page
    */
   detectAttachments() {
     const timer = Logger.timer('attachment-detection');
-    const attachments = [];
+    let attachments = [];
     const processedUrls = new Set();
 
     try {
+      // Custom detection for specific platforms like Coding.net
+      if (window.location.hostname.includes('coding.net')) {
+        const codingAttachments = this._detectCodingNetAttachments();
+        if (codingAttachments.length > 0) {
+          attachments = attachments.concat(codingAttachments);
+          codingAttachments.forEach(att => processedUrls.add(att.url));
+        }
+      }
       for (const groupName in this.attachmentSelectors) {
         const group = this.attachmentSelectors[groupName];
         const { weight, selectors } = group;
