@@ -4,14 +4,14 @@
 // Inline logging utilities to avoid module import issues
 const Logger = {
   debug: (message, data) => {
-    if (this.isDebugMode()) {
+    if (Logger.isDebugMode()) {
       console.debug(`[ContentScript DEBUG] ${message}`, data || '');
     }
   },
   info: (message, data) => console.info(`[ContentScript INFO] ${message}`, data || ''),
   warn: (message, data) => console.warn(`[ContentScript WARN] ${message}`, data || ''),
   error: (message, data) => console.error(`[ContentScript ERROR] ${message}`, data || ''),
-  timer: (label) => {
+  timer: label => {
     const start = performance.now();
     return {
       end: () => {
@@ -26,7 +26,7 @@ const Logger = {
 };
 
 const Config = {
-  isFeatureEnabled: (feature) => {
+  isFeatureEnabled: feature => {
     switch (feature) {
       case 'debug':
         return localStorage.getItem('security-analyzer-debug') === 'true';
@@ -44,43 +44,85 @@ const Config = {
 class ContentDetector {
   constructor() {
     this.prdKeywords = [
-      "prd", "product requirement", "requirement", "spec", "specification",
-      "functional spec", "产品需求", "需求文档", "功能说明", "规格说明",
-      "需求规格", "产品规格", "系统需求", "业务需求"
+      'prd',
+      'product requirement',
+      'requirement',
+      'spec',
+      'specification',
+      'functional spec',
+      '产品需求',
+      '需求文档',
+      '功能说明',
+      '规格说明',
+      '需求规格',
+      '产品规格',
+      '系统需求',
+      '业务需求'
     ];
 
     this.attachmentSelectors = [
       // Basic file type selectors
-      'a[href*=".pdf"]', 'a[href*=".docx"]', 'a[href*=".doc"]',
-      'a[href*=".xlsx"]', 'a[href*=".pptx"]', 'a[href$=".pdf"]',
-      'a[href$=".docx"]', 'a[href$=".doc"]', 'a[href$=".xlsx"]',
-      'a[href$=".pptx"]', 'a[href$=".txt"]', 'a[href$=".zip"]', 'a[href$=".rar"]',
+      'a[href*=".pdf"]',
+      'a[href*=".docx"]',
+      'a[href*=".doc"]',
+      'a[href*=".xlsx"]',
+      'a[href*=".pptx"]',
+      'a[href$=".pdf"]',
+      'a[href$=".docx"]',
+      'a[href$=".doc"]',
+      'a[href$=".xlsx"]',
+      'a[href$=".pptx"]',
+      'a[href$=".txt"]',
+      'a[href$=".zip"]',
+      'a[href$=".rar"]',
 
       // Download-related selectors
-      "a[download]", 'a[href*="download"]', 'a[title*="下载"]',
-      'a[title*="Download"]', 'button[onclick*="download"]',
-      'a[title*="附件"]', 'a[title*="文件"]', 'a[aria-label*="下载"]',
+      'a[download]',
+      'a[href*="download"]',
+      'a[title*="下载"]',
+      'a[title*="Download"]',
+      'button[onclick*="download"]',
+      'a[title*="附件"]',
+      'a[title*="文件"]',
+      'a[aria-label*="下载"]',
       'a[aria-label*="附件"]',
 
       // Platform-specific selectors
-      '.attachment-link', '.file-link', '.download-link',
-      '[data-file-type]', '[data-attachment]',
+      '.attachment-link',
+      '.file-link',
+      '.download-link',
+      '[data-file-type]',
+      '[data-attachment]',
 
       // PingCode specific
-      '.file-item a', '.attachment-item a', '.document-link',
-      '[class*="attachment"]', '[class*="file"]', '[class*="document"]',
-      'a[href*="atlas.pingcode.com"]', 'a[href*="/api/download/"]',
-      '.attachment-list a', '[class*="attachment"] a',
+      '.file-item a',
+      '.attachment-item a',
+      '.document-link',
+      '[class*="attachment"]',
+      '[class*="file"]',
+      '[class*="document"]',
+      'a[href*="atlas.pingcode.com"]',
+      'a[href*="/api/download/"]',
+      '.attachment-list a',
+      '[class*="attachment"] a',
 
       // Coding.net specific
-      '.files-table a', '.file-entry a', '.issue-attachments a',
-      'a[href*="/attachments/"]', 'a[href*="/files/"]',
-      '.requirement-attachments a', '.issue-content a[href*="download"]',
-      '[class*="upload"] a', '[class*="attach"] a',
+      '.files-table a',
+      '.file-entry a',
+      '.issue-attachments a',
+      'a[href*="/attachments/"]',
+      'a[href*="/files/"]',
+      '.requirement-attachments a',
+      '.issue-content a[href*="download"]',
+      '[class*="upload"] a',
+      '[class*="attach"] a',
 
       // Jira/Confluence specific
-      '.attachment-list a', '.attachments a', '.file-list a',
-      'a[href*="attachment"]', 'a[href*="downloadFile"]'
+      '.attachment-list a',
+      '.attachments a',
+      '.file-list a',
+      'a[href*="attachment"]',
+      'a[href*="downloadFile"]'
     ];
 
     this.cache = new Map();
@@ -150,9 +192,10 @@ class ContentDetector {
         this.cacheResult(result);
       }
 
-      Logger.info(`Content detection completed: ${attachments.length} attachments, ${pageText.length} chars text`);
+      Logger.info(
+        `Content detection completed: ${attachments.length} attachments, ${pageText.length} chars text`
+      );
       return result;
-
     } catch (error) {
       Logger.error('Content detection failed:', error);
       return {
@@ -204,7 +247,6 @@ class ContentDetector {
 
       Logger.info(`Found ${attachments.length} unique attachments`);
       return attachments;
-
     } catch (error) {
       Logger.error('Attachment detection failed:', error);
       return [];
@@ -301,14 +343,14 @@ class ContentDetector {
     const fullString = `${url} ${name}`.toLowerCase();
 
     const typeMap = {
-      'pdf': /\.pdf/,
-      'docx': /\.docx/,
-      'doc': /\.doc(?!x)/,
-      'xlsx': /\.xlsx/,
-      'pptx': /\.pptx/,
-      'txt': /\.txt/,
-      'zip': /\.zip/,
-      'rar': /\.rar/
+      pdf: /\.pdf/,
+      docx: /\.docx/,
+      doc: /\.doc(?!x)/,
+      xlsx: /\.xlsx/,
+      pptx: /\.pptx/,
+      txt: /\.txt/,
+      zip: /\.zip/,
+      rar: /\.rar/
     };
 
     for (const [type, regex] of Object.entries(typeMap)) {
@@ -337,7 +379,9 @@ class ContentDetector {
    */
   extractNameFromPageContext(element) {
     try {
-      const parent = element.closest('[class*="file"], [class*="attachment"], [class*="document"]');
+      const parent = element.closest(
+        '[class*="file"], [class*="attachment"], [class*="document"]'
+      );
       if (parent) {
         const text = parent.textContent?.trim();
         if (text && text.length < 100) {
@@ -414,12 +458,22 @@ class ContentDetector {
 
     try {
       const contentSelectors = [
-        'main', '.main-content', '#main', '.content',
-        '.page-content', '.article-content', '.post-content',
-        '.requirement-content', '.description', '.detail',
+        'main',
+        '.main-content',
+        '#main',
+        '.content',
+        '.page-content',
+        '.article-content',
+        '.post-content',
+        '.requirement-content',
+        '.description',
+        '.detail',
         // Platform specific
-        '.issue-body', '.requirement-detail', '.specification',
-        '.prd-content', '.document-content'
+        '.issue-body',
+        '.requirement-detail',
+        '.specification',
+        '.prd-content',
+        '.document-content'
       ];
 
       let bestContent = '';
@@ -449,7 +503,6 @@ class ContentDetector {
       const trimmedContent = bestContent.substring(0, 50000); // Limit to 50k chars
       Logger.info(`Extracted ${trimmedContent.length} characters of page text`);
       return trimmedContent;
-
     } catch (error) {
       Logger.error('Page text extraction failed:', error);
       return '';
@@ -527,7 +580,7 @@ class ContentDetector {
       const key = window.location.href;
       const cached = this.cache.get(key);
 
-      if (cached && (Date.now() - cached.timestamp < this.cacheExpiryTime)) {
+      if (cached && Date.now() - cached.timestamp < this.cacheExpiryTime) {
         Logger.debug('Using cached result');
         return cached.data;
       }
@@ -580,7 +633,8 @@ class ContentDetector {
 
     // Check for attachments
     Logger.debug('Attachment elements found:');
-    for (const selector of this.attachmentSelectors.slice(0, 10)) { // Limit to first 10
+    for (const selector of this.attachmentSelectors.slice(0, 10)) {
+      // Limit to first 10
       const elements = document.querySelectorAll(selector);
       if (elements.length > 0) {
         Logger.debug(`${selector}: ${elements.length} elements`);
