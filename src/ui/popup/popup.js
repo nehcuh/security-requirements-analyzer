@@ -613,7 +613,7 @@ class SecurityAnalysisPopup {
     if (!hasValidExtension && !allowedTypes.includes(file.type)) {
       const errorMsg = '不支持的文件类型。请选择 PDF、DOCX 或 DOC 文件。';
       console.error('❌', errorMsg);
-      alert(errorMsg);
+      this.showTimeoutNotification(errorMsg);
       return;
     }
 
@@ -622,7 +622,7 @@ class SecurityAnalysisPopup {
     if (file.size > maxSize) {
       const errorMsg = '文件太大。请选择小于10MB的文件。';
       console.error('❌', errorMsg, `文件大小: ${this.formatFileSize(file.size)}`);
-      alert(errorMsg);
+      this.showTimeoutNotification(errorMsg);
       return;
     }
 
@@ -1042,20 +1042,25 @@ class SecurityAnalysisPopup {
   }
 
   fallbackShowResult(html) {
-    const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
-    if (newWindow) {
-      newWindow.document.write(html);
-      newWindow.document.close();
+    // 避免弹窗，直接在控制台输出结果
+    console.log('=== 安全需求分析结果 ===');
+    console.log(html);
+
+    // 尝试使用chrome.tabs.create创建新标签页
+    if (chrome?.tabs?.create) {
+      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+      chrome.tabs.create({ url: dataUrl }).catch(() => {
+        this.showTimeoutNotification('分析完成！详细结果已输出到控制台');
+      });
     } else {
-      // Analysis completed
-      alert('分析完成！请查看控制台输出或允许弹窗查看详细结果。');
+      this.showTimeoutNotification('分析完成！详细结果已输出到控制台');
     }
   }
 
   // 显示导出选项
   showExportOptions() {
     if (!this.lastAnalysisResult) {
-      alert('没有可导出的分析结果');
+      this.showTimeoutNotification('没有可导出的分析结果');
       return;
     }
 
@@ -1085,7 +1090,7 @@ class SecurityAnalysisPopup {
   // 导出结果
   exportResult(format) {
     if (!this.lastAnalysisResult) {
-      alert('没有可导出的分析结果');
+      this.showTimeoutNotification('没有可导出的分析结果');
       return;
     }
 
@@ -1114,7 +1119,7 @@ class SecurityAnalysisPopup {
         break;
 
       default:
-        alert('不支持的导出格式');
+        this.showTimeoutNotification('不支持的导出格式');
         return;
     }
 
@@ -1678,7 +1683,7 @@ class SecurityAnalysisPopup {
       batchUI.showBatchAnalysisUI();
     } catch (error) {
       console.error('批量分析功能初始化失败:', error);
-      alert('批量分析功能暂时不可用，请稍后再试');
+      this.showTimeoutNotification('批量分析功能暂时不可用，请稍后再试');
     }
   }
 }

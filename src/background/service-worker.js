@@ -4,15 +4,15 @@
 class SecurityAnalysisService {
   constructor() {
     this.llmConfig = {
-      provider: "custom",
-      endpoint: "http://localhost:1234/v1/chat/completions",
-      apiKey: "",
-      model: "deepseek/deepseek-r1-0528-qwen3-8b",
+      provider: 'custom',
+      endpoint: 'http://localhost:1234/v1/chat/completions',
+      apiKey: '',
+      model: 'deepseek/deepseek-r1-0528-qwen3-8b'
     };
 
     this.threatModelingPlatform = {
-      baseUrl: "",
-      apiKey: "",
+      baseUrl: '',
+      apiKey: ''
     };
 
     // 初始化STAC服务和文档解析器
@@ -67,19 +67,22 @@ class SecurityAnalysisService {
     try {
       // 初始化工具函数
       await this.initUtils();
-      
+
       // 延迟加载STAC服务
       await this.initSTACService();
-      
+
       // 延迟加载文档解析器
       await this.initDocumentParser();
-      
+
       // 初始化输入验证器
       await this.initInputValidator();
-      
+
       console.log('Advanced services initialized successfully');
     } catch (error) {
-      console.warn('Advanced services initialization failed, falling back to basic mode:', error);
+      console.warn(
+        'Advanced services initialization failed, falling back to basic mode:',
+        error
+      );
     }
   }
 
@@ -90,15 +93,16 @@ class SecurityAnalysisService {
       console.warn('Utils initialization failed:', error);
       // 创建基础工具函数回退
       this.utils = {
-        assessThreatLevel: (text) => {
-          const highKeywords = ["严重", "高危", "critical", "high"];
-          const mediumKeywords = ["中等", "medium"];
+        assessThreatLevel: text => {
+          const highKeywords = ['严重', '高危', 'critical', 'high'];
+          const mediumKeywords = ['中等', 'medium'];
           const lowerText = text.toLowerCase();
-          if (highKeywords.some(keyword => lowerText.includes(keyword))) return "high";
-          else if (mediumKeywords.some(keyword => lowerText.includes(keyword))) return "medium";
-          return "low";
+          if (highKeywords.some(keyword => lowerText.includes(keyword))) return 'high';
+          else if (mediumKeywords.some(keyword => lowerText.includes(keyword)))
+            return 'medium';
+          return 'low';
         },
-        formatTimestamp: (timestamp) => new Date(timestamp).toLocaleString(),
+        formatTimestamp: timestamp => new Date(timestamp).toLocaleString(),
         truncateText: (text, maxLength = 100) => {
           if (!text || text.length <= maxLength) return text;
           return text.substring(0, maxLength) + '...';
@@ -150,18 +154,18 @@ class SecurityAnalysisService {
         const tab = await chrome.tabs.get(tabId);
         url = tab.url;
       }
-      
+
       // 跳过chrome://和extension://页面
       if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) {
         return;
       }
 
-      console.log("🔍 检查content script是否已注入，URL:", url);
+      console.log('🔍 检查content script是否已注入，URL:', url);
 
       // 测试Content Script是否已经注入
       try {
         await chrome.tabs.sendMessage(tabId, { action: 'diagnostic-ping' });
-        console.log("✅ Content Script已存在");
+        console.log('✅ Content Script已存在');
         // 如果没有抛出异常，说明Content Script已经存在
         return;
       } catch (error) {
@@ -185,7 +189,12 @@ class SecurityAnalysisService {
     try {
       const tabs = await chrome.tabs.query({});
       for (const tab of tabs) {
-        if (tab.id && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+        if (
+          tab.id &&
+          tab.url &&
+          !tab.url.startsWith('chrome://') &&
+          !tab.url.startsWith('chrome-extension://')
+        ) {
           await this.ensureContentScriptInjected(tab.id, tab.url);
         }
       }
@@ -196,17 +205,14 @@ class SecurityAnalysisService {
 
   async loadConfig() {
     try {
-      const result = await chrome.storage.sync.get([
-        "llmConfig",
-        "threatModelingConfig",
-      ]);
+      const result = await chrome.storage.sync.get(['llmConfig', 'threatModelingConfig']);
 
       // 确保包含默认配置
       const defaultConfig = {
-        provider: "custom",
-        endpoint: "http://localhost:1234/v1/chat/completions",
-        apiKey: "",
-        model: "deepseek/deepseek-r1-0528-qwen3-8b",
+        provider: 'custom',
+        endpoint: 'http://localhost:1234/v1/chat/completions',
+        apiKey: '',
+        model: 'deepseek/deepseek-r1-0528-qwen3-8b'
       };
 
       if (result.llmConfig) {
@@ -217,59 +223,61 @@ class SecurityAnalysisService {
       if (result.threatModelingConfig) {
         this.threatModelingPlatform = {
           ...this.threatModelingPlatform,
-          ...result.threatModelingConfig,
+          ...result.threatModelingConfig
         };
       }
     } catch (error) {
-      console.error("加载配置失败:", error);
+      console.error('加载配置失败:', error);
     }
   }
 
   async handleMessage(request, sender, sendResponse) {
     try {
       // Handle diagnostic ping without validation for debugging
-      if (request.action === "diagnostic-ping") {
+      if (request.action === 'diagnostic-ping') {
         sendResponse({
           success: true,
-          message: "Background service is active",
-          timestamp: this.utils?.formatTimestamp ? this.utils.formatTimestamp(Date.now()) : new Date().toISOString(),
-          receivedTimestamp: request.timestamp,
+          message: 'Background service is active',
+          timestamp: this.utils?.formatTimestamp
+            ? this.utils.formatTimestamp(Date.now())
+            : new Date().toISOString(),
+          receivedTimestamp: request.timestamp
         });
         return;
       }
 
       switch (request.action) {
-        case "detectContent":
+        case 'detectContent':
           // 转发到content script进行页面内容检测
           const contentResult = await this.forwardToContentScript(request);
           sendResponse(contentResult);
           break;
 
-        case "analyzeContent":
+        case 'analyzeContent':
           const analysisResult = await this.analyzeContent(request.data);
           sendResponse({ success: true, data: analysisResult });
           break;
 
-        case "parseFile":
+        case 'parseFile':
           const fileContent = await this.parseFile(request.data);
           sendResponse({ success: true, content: fileContent });
           break;
 
-        case "updateConfig":
+        case 'updateConfig':
           await this.updateConfig(request.data);
           sendResponse({ success: true });
           break;
 
-        case "testLLMConnection":
+        case 'testLLMConnection':
           const testResult = await this.testLLMConnection(request.data);
           sendResponse(testResult);
           break;
 
         default:
-          sendResponse({ success: false, error: "未知操作" });
+          sendResponse({ success: false, error: '未知操作' });
       }
     } catch (error) {
-      console.error("处理消息失败:", error);
+      console.error('处理消息失败:', error);
       sendResponse({ success: false, error: error.message });
     }
   }
@@ -277,17 +285,17 @@ class SecurityAnalysisService {
   async forwardToContentScript(request) {
     try {
       let tabId = request.tabId;
-      
+
       // 如果没有提供tabId，获取当前活动标签页
       if (!tabId) {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab) {
-          throw new Error("无法获取当前标签页");
+          throw new Error('无法获取当前标签页');
         }
         tabId = tab.id;
       }
 
-      console.log("🔄 Background转发消息到content script，tabId:", tabId);
+      console.log('🔄 Background转发消息到content script，tabId:', tabId);
 
       // 确保content script已注入
       await this.ensureContentScriptInjected(tabId, null);
@@ -298,15 +306,26 @@ class SecurityAnalysisService {
         data: request.data
       });
 
-      console.log("✅ Content script响应:", response);
-      return { success: true, ...response };
+      console.log('✅ Content script响应:', response);
+
+      // 如果content script返回了正确的结构，直接返回其数据
+      if (response && response.success && response.data) {
+        return {
+          success: true,
+          attachments: response.data.attachments || [],
+          pageText: response.data.pageText || '',
+          ...response.data
+        };
+      }
+
+      return response || { success: false, error: 'No response from content script' };
     } catch (error) {
-      console.error("❌ 转发到content script失败:", error);
-      return { 
-        success: false, 
+      console.error('❌ 转发到content script失败:', error);
+      return {
+        success: false,
         error: error.message,
         attachments: [],
-        pageText: ""
+        pageText: ''
       };
     }
   }
@@ -367,27 +386,28 @@ class SecurityAnalysisService {
   async analyzeWithSTAC(content, prompt) {
     try {
       console.log('🔍 开始STAC知识库分析...');
-      
+
       // 使用STAC服务匹配安全场景
       const stacMatches = await this.stacService.matchScenarios(content);
       console.log('📊 STAC匹配结果:', stacMatches);
-      
+
       if (stacMatches && stacMatches.length > 0) {
         console.log(`✅ STAC匹配成功，找到 ${stacMatches.length} 个安全场景`);
-        
+
         // 获取详细的威胁信息和安全需求
         const threatInfo = this.stacService.extractThreatInformation(stacMatches);
-        const securityRequirements = this.stacService.getSecurityRequirements(stacMatches);
+        const securityRequirements =
+          this.stacService.getSecurityRequirements(stacMatches);
         const testCases = this.stacService.getTestCases(stacMatches);
-        
+
         console.log('📋 威胁信息:', threatInfo);
         console.log('🔒 安全需求:', securityRequirements);
         console.log('🧪 测试用例:', testCases);
-        
+
         // 构建基于STAC的分析结果
         const securityScenarios = stacMatches.map(match => {
           const scenarioData = this.stacService.getScenarioData(match.scenario);
-          
+
           return {
             category: match.scenario,
             description: `${match.scenario} (置信度: ${Math.round(match.confidence * 100)}%)`,
@@ -410,15 +430,26 @@ class SecurityAnalysisService {
           details: threat.details,
           level: threat.riskLevel,
           impact: threat.scenario,
-          securityRequirement: threat.securityRequirement ? threat.securityRequirement.name : null,
+          securityRequirement: threat.securityRequirement
+            ? threat.securityRequirement.name
+            : null,
           testCase: threat.testCase ? threat.testCase.name : null
         }));
 
-        const stacRecommendations = this.generateSTACRecommendations(stacMatches, securityRequirements, testCases);
+        const stacRecommendations = this.generateSTACRecommendations(
+          stacMatches,
+          securityRequirements,
+          testCases
+        );
 
         const result = {
           originalContent: content,
-          analysis: this.formatSTACAnalysis(stacMatches, threatInfo, securityRequirements, testCases),
+          analysis: this.formatSTACAnalysis(
+            stacMatches,
+            threatInfo,
+            securityRequirements,
+            testCases
+          ),
           securityScenarios,
           threats,
           securityRequirements: securityRequirements.map(req => ({
@@ -439,17 +470,17 @@ class SecurityAnalysisService {
           stacMatches: stacMatches,
           stacStatistics: {
             totalScenarios: stacMatches.length,
-            averageConfidence: stacMatches.reduce((sum, m) => sum + m.confidence, 0) / stacMatches.length,
+            averageConfidence:
+              stacMatches.reduce((sum, m) => sum + m.confidence, 0) / stacMatches.length,
             totalThreats: threatInfo.threats.length,
             totalRequirements: securityRequirements.length,
             totalTestCases: testCases.length
           },
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         };
-        
+
         console.log('✅ STAC分析完成:', result);
         return result;
-        
       } else {
         console.warn('⚠️ STAC未找到匹配的安全场景，将回退到LLM分析');
         // 如果STAC没有匹配结果，回退到LLM
@@ -480,7 +511,7 @@ class SecurityAnalysisService {
       assets: this.extractAssets(content),
       recommendations: this.extractRecommendations(llmResult),
       analysisMethod: 'LLM',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
   }
 
@@ -515,7 +546,7 @@ class SecurityAnalysisService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return Math.abs(hash).toString(36);
@@ -541,17 +572,17 @@ class SecurityAnalysisService {
 
 产品需求内容：`;
 
-    return (customPrompt || defaultPrompt) + "\n\n" + JSON.stringify(content);
+    return (customPrompt || defaultPrompt) + '\n\n' + JSON.stringify(content);
   }
 
   async callLLM(prompt, content) {
-    if (this.llmConfig.provider !== "custom" && !this.llmConfig.apiKey) {
-      throw new Error("请先配置LLM API密钥");
+    if (this.llmConfig.provider !== 'custom' && !this.llmConfig.apiKey) {
+      throw new Error('请先配置LLM API密钥');
     }
 
     try {
       const headers = {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       };
 
       // 只有在API密钥存在时才添加Authorization头
@@ -560,19 +591,19 @@ class SecurityAnalysisService {
       }
 
       const response = await fetch(this.llmConfig.endpoint, {
-        method: "POST",
+        method: 'POST',
         headers,
         body: JSON.stringify({
           model: this.llmConfig.model,
           messages: [
             {
-              role: "user",
-              content: prompt,
-            },
+              role: 'user',
+              content: prompt
+            }
           ],
           max_tokens: 2000,
-          temperature: 0.3,
-        }),
+          temperature: 0.3
+        })
       });
 
       if (!response.ok) {
@@ -582,7 +613,7 @@ class SecurityAnalysisService {
       const result = await response.json();
       return result.choices[0].message.content;
     } catch (error) {
-      console.error("LLM调用失败:", error);
+      console.error('LLM调用失败:', error);
       throw error;
     }
   }
@@ -593,27 +624,25 @@ class SecurityAnalysisService {
     } catch (error) {
       // 如果不是JSON格式，进行文本解析
       return {
-        summary: "需求分析",
+        summary: '需求分析',
         analysis: llmResult,
         threats: this.extractThreats(llmResult),
-        testScenarios: this.extractTestScenarios(llmResult),
+        testScenarios: this.extractTestScenarios(llmResult)
       };
     }
   }
 
   extractThreats(text) {
     const threats = [];
-    const lines = text.split("\n");
+    const lines = text.split('\n');
 
-    lines.forEach((line) => {
-      if (
-        line.includes("威胁") ||
-        line.includes("风险") ||
-        line.includes("threat")
-      ) {
+    lines.forEach(line => {
+      if (line.includes('威胁') || line.includes('风险') || line.includes('threat')) {
         threats.push({
           description: line.trim(),
-          level: this.utils?.assessThreatLevel ? this.utils.assessThreatLevel(line) : 'medium',
+          level: this.utils?.assessThreatLevel
+            ? this.utils.assessThreatLevel(line)
+            : 'medium'
         });
       }
     });
@@ -623,17 +652,13 @@ class SecurityAnalysisService {
 
   extractTestScenarios(text) {
     const scenarios = [];
-    const lines = text.split("\n");
+    const lines = text.split('\n');
 
-    lines.forEach((line) => {
-      if (
-        line.includes("测试") ||
-        line.includes("验证") ||
-        line.includes("test")
-      ) {
+    lines.forEach(line => {
+      if (line.includes('测试') || line.includes('验证') || line.includes('test')) {
         scenarios.push({
           description: line.trim(),
-          type: "security_test",
+          type: 'security_test'
         });
       }
     });
@@ -646,24 +671,25 @@ class SecurityAnalysisService {
       // 处理本地文件（ArrayBuffer格式）
       if (attachment.arrayBuffer && attachment.arrayBuffer.length > 0) {
         console.log('解析本地文件:', attachment.name);
-        
+
         const arrayBuffer = new Uint8Array(attachment.arrayBuffer).buffer;
-        
+
         if (this.documentParser) {
           try {
             let parsedContent;
-            
+
             if (attachment.type === 'application/pdf') {
               parsedContent = await this.documentParser.parsePDF(arrayBuffer);
             } else if (
-              attachment.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+              attachment.type ===
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
               attachment.type === 'application/msword'
             ) {
               parsedContent = await this.documentParser.parseDOCX(arrayBuffer);
             } else {
               throw new Error(`不支持的文件类型: ${attachment.type}`);
             }
-            
+
             if (parsedContent && parsedContent.success && parsedContent.text) {
               return parsedContent.text;
             } else {
@@ -673,7 +699,10 @@ class SecurityAnalysisService {
             console.warn('高级文档解析失败，尝试基础解析:', error);
             // 回退到基础文本提取
             try {
-              const textContent = await this.basicTextExtraction(arrayBuffer, attachment.type);
+              const textContent = await this.basicTextExtraction(
+                arrayBuffer,
+                attachment.type
+              );
               return textContent || `文件已读取: ${attachment.name} (${attachment.type})`;
             } catch (basicError) {
               throw new Error(`文档解析失败: ${error.message}`);
@@ -682,7 +711,10 @@ class SecurityAnalysisService {
         } else {
           // 文档解析器未初始化，使用基础方法
           try {
-            const textContent = await this.basicTextExtraction(arrayBuffer, attachment.type);
+            const textContent = await this.basicTextExtraction(
+              arrayBuffer,
+              attachment.type
+            );
             return textContent || `文件已读取: ${attachment.name} (${attachment.type})`;
           } catch (basicError) {
             return `文件信息: ${attachment.name} (${attachment.type}, ${this.formatFileSize(attachment.size)})`;
@@ -693,14 +725,16 @@ class SecurityAnalysisService {
       // 处理URL文件（保持原有逻辑）
       if (this.documentParser && attachment.url) {
         console.log('使用文档解析器解析文件:', attachment.name);
-        
-        const parsedContent = await this.documentParser.parseDocumentFromURL(attachment.url);
+
+        const parsedContent = await this.documentParser.parseDocumentFromURL(
+          attachment.url
+        );
         return parsedContent.text || parsedContent.content || '解析成功但内容为空';
       }
 
       // 回退到基础解析
       console.log('使用基础解析器解析文件:', attachment.name);
-      
+
       if (attachment.url) {
         const response = await fetch(attachment.url);
         if (response.ok) {
@@ -729,7 +763,7 @@ class SecurityAnalysisService {
         throw new Error('PDF基础提取失败');
       }
     }
-    
+
     // 对于其他文件类型，返回基础信息
     throw new Error('基础文本提取不支持此文件类型');
   }
@@ -753,20 +787,20 @@ class SecurityAnalysisService {
       const response = await fetch(
         `${this.threatModelingPlatform.baseUrl}/api/scenarios`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${this.threatModelingPlatform.apiKey}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.threatModelingPlatform.apiKey}`
           },
-          body: JSON.stringify(scenarios),
-        },
+          body: JSON.stringify(scenarios)
+        }
       );
 
       if (response.ok) {
         return await response.json();
       }
     } catch (error) {
-      console.error("发送到威胁建模平台失败:", error);
+      console.error('发送到威胁建模平台失败:', error);
     }
 
     return null;
@@ -782,29 +816,29 @@ class SecurityAnalysisService {
       const testPrompt = "请回复'连接测试成功'来确认API连接正常。";
 
       const response = await fetch(llmConfig.endpoint, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${llmConfig.apiKey}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${llmConfig.apiKey}`
         },
         body: JSON.stringify({
           model: llmConfig.model,
           messages: [
             {
-              role: "user",
-              content: testPrompt,
-            },
+              role: 'user',
+              content: testPrompt
+            }
           ],
           max_tokens: 50,
-          temperature: 0.1,
-        }),
+          temperature: 0.1
+        })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         return {
           success: false,
-          error: `API调用失败 (${response.status}): ${errorText}`,
+          error: `API调用失败 (${response.status}): ${errorText}`
         };
       }
 
@@ -813,19 +847,19 @@ class SecurityAnalysisService {
       if (result.choices && result.choices[0] && result.choices[0].message) {
         return {
           success: true,
-          message: "连接测试成功",
-          response: result.choices[0].message.content,
+          message: '连接测试成功',
+          response: result.choices[0].message.content
         };
       } else {
         return {
           success: false,
-          error: "响应格式不正确: " + JSON.stringify(result),
+          error: '响应格式不正确: ' + JSON.stringify(result)
         };
       }
     } catch (error) {
       return {
         success: false,
-        error: `连接测试失败: ${error.message}`,
+        error: `连接测试失败: ${error.message}`
       };
     }
   }
@@ -833,14 +867,23 @@ class SecurityAnalysisService {
   // 提取资产信息
   extractAssets(content) {
     const assets = [];
-    const keywords = ['数据库', '用户信息', '密码', 'API', '接口', '文件', '服务器', '系统'];
-    
+    const keywords = [
+      '数据库',
+      '用户信息',
+      '密码',
+      'API',
+      '接口',
+      '文件',
+      '服务器',
+      '系统'
+    ];
+
     keywords.forEach(keyword => {
       if (content.includes(keyword)) {
         assets.push(keyword);
       }
     });
-    
+
     return assets.length > 0 ? assets : ['未识别特定资产'];
   }
 
@@ -854,8 +897,10 @@ class SecurityAnalysisService {
   // 格式化STAC分析结果
   formatSTACAnalysis(stacMatches, threatInfo, securityRequirements, testCases) {
     const totalScenarios = stacMatches.length;
-    const avgConfidence = Math.round((stacMatches.reduce((sum, m) => sum + m.confidence, 0) / totalScenarios) * 100);
-    
+    const avgConfidence = Math.round(
+      (stacMatches.reduce((sum, m) => sum + m.confidence, 0) / totalScenarios) * 100
+    );
+
     let analysis = `🔍 **STAC知识库分析结果**\n\n`;
     analysis += `📊 **匹配统计:**\n`;
     analysis += `- 匹配场景: ${totalScenarios} 个\n`;
@@ -863,7 +908,7 @@ class SecurityAnalysisService {
     analysis += `- 识别威胁: ${threatInfo.threats.length} 个\n`;
     analysis += `- 安全需求: ${securityRequirements.length} 个\n`;
     analysis += `- 测试用例: ${testCases.length} 个\n\n`;
-    
+
     analysis += `🎯 **匹配的安全场景:**\n`;
     stacMatches.forEach((match, index) => {
       analysis += `${index + 1}. **${match.scenario}** (置信度: ${Math.round(match.confidence * 100)}%)\n`;
@@ -874,7 +919,7 @@ class SecurityAnalysisService {
       }
       analysis += `\n`;
     });
-    
+
     if (threatInfo.threats.length > 0) {
       analysis += `⚠️ **主要安全威胁:**\n`;
       threatInfo.threats.slice(0, 5).forEach((threat, index) => {
@@ -885,14 +930,14 @@ class SecurityAnalysisService {
         analysis += `\n`;
       });
     }
-    
+
     return analysis;
   }
 
   // 生成STAC推荐
   generateSTACRecommendations(stacMatches, securityRequirements, testCases) {
     const recommendations = [];
-    
+
     // 高优先级安全需求推荐
     const highPriorityReqs = securityRequirements.filter(req => req.priority > 0.6);
     if (highPriorityReqs.length > 0) {
@@ -901,7 +946,7 @@ class SecurityAnalysisService {
         recommendations.push(`   - ${req.name}: ${req.details.substring(0, 80)}...`);
       });
     }
-    
+
     // 关键测试用例推荐
     const criticalTests = testCases.filter(test => test.priority > 0.5);
     if (criticalTests.length > 0) {
@@ -910,25 +955,29 @@ class SecurityAnalysisService {
         recommendations.push(`   - ${test.name}: ${test.details.substring(0, 80)}...`);
       });
     }
-    
+
     // 场景覆盖推荐
     if (stacMatches.length < 3) {
-      recommendations.push(`📈 建议扩大安全分析覆盖范围，当前仅匹配到 ${stacMatches.length} 个场景`);
+      recommendations.push(
+        `📈 建议扩大安全分析覆盖范围，当前仅匹配到 ${stacMatches.length} 个场景`
+      );
     }
-    
+
     // 置信度推荐
     const lowConfidenceMatches = stacMatches.filter(m => m.confidence < 0.3);
     if (lowConfidenceMatches.length > 0) {
-      recommendations.push(`⚡ ${lowConfidenceMatches.length} 个场景置信度较低，建议补充更详细的安全相关信息`);
+      recommendations.push(
+        `⚡ ${lowConfidenceMatches.length} 个场景置信度较低，建议补充更详细的安全相关信息`
+      );
     }
-    
+
     return recommendations;
   }
 
   // 原有的生成推荐方法（用于LLM分析）
   generateRecommendations(stacMatches) {
     const recommendations = [];
-    
+
     stacMatches.forEach(match => {
       if (match.recommendations) {
         recommendations.push(...match.recommendations);
@@ -936,7 +985,7 @@ class SecurityAnalysisService {
         recommendations.push(`针对${match.category}威胁，建议进行相应的安全加固`);
       }
     });
-    
+
     return recommendations.length > 0 ? recommendations : ['建议进行全面的安全评估'];
   }
 
@@ -944,13 +993,17 @@ class SecurityAnalysisService {
   extractRecommendations(text) {
     const recommendations = [];
     const lines = text.split('\n');
-    
+
     lines.forEach(line => {
-      if (line.includes('建议') || line.includes('推荐') || line.includes('recommendation')) {
+      if (
+        line.includes('建议') ||
+        line.includes('推荐') ||
+        line.includes('recommendation')
+      ) {
         recommendations.push(line.trim());
       }
     });
-    
+
     return recommendations.length > 0 ? recommendations : ['建议进行安全评估'];
   }
 }

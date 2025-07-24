@@ -13,7 +13,8 @@ class ConfigManager {
         apiKey: ''
       },
       analysisConfig: {
-        defaultPrompt: '根据产品需求内容，识别潜在的安全风险点，明确对应的安全测试场景，并生成相应的安全测试用例。重点关注：数据安全、身份认证、权限控制、输入验证、业务逻辑安全等方面。'
+        defaultPrompt:
+          '根据产品需求内容，识别潜在的安全风险点，明确对应的安全测试场景，并生成相应的安全测试用例。重点关注：数据安全、身份认证、权限控制、输入验证、业务逻辑安全等方面。'
       },
       detectionConfig: {
         customSelectors: []
@@ -42,9 +43,18 @@ class ConfigManager {
       // 合并默认配置和保存的配置
       const config = {
         llmConfig: { ...this.defaultConfig.llmConfig, ...result.llmConfig },
-        threatModelingConfig: { ...this.defaultConfig.threatModelingConfig, ...result.threatModelingConfig },
-        analysisConfig: { ...this.defaultConfig.analysisConfig, ...result.analysisConfig },
-        detectionConfig: { ...this.defaultConfig.detectionConfig, ...result.detectionConfig }
+        threatModelingConfig: {
+          ...this.defaultConfig.threatModelingConfig,
+          ...result.threatModelingConfig
+        },
+        analysisConfig: {
+          ...this.defaultConfig.analysisConfig,
+          ...result.analysisConfig
+        },
+        detectionConfig: {
+          ...this.defaultConfig.detectionConfig,
+          ...result.detectionConfig
+        }
       };
 
       this.populateForm(config);
@@ -62,11 +72,14 @@ class ConfigManager {
     document.getElementById('llm-model').value = config.llmConfig.model || '';
 
     // 威胁建模平台配置
-    document.getElementById('threat-platform-url').value = config.threatModelingConfig.baseUrl || '';
-    document.getElementById('threat-platform-key').value = config.threatModelingConfig.apiKey || '';
+    document.getElementById('threat-platform-url').value =
+      config.threatModelingConfig.baseUrl || '';
+    document.getElementById('threat-platform-key').value =
+      config.threatModelingConfig.apiKey || '';
 
     // 分析配置
-    document.getElementById('default-prompt').value = config.analysisConfig.defaultPrompt || '';
+    document.getElementById('default-prompt').value =
+      config.analysisConfig.defaultPrompt || '';
 
     // 检测配置
     const customSelectors = config.detectionConfig.customSelectors || [];
@@ -152,7 +165,9 @@ class ConfigManager {
   }
 
   async applyQuickSetup() {
-    const selectedProvider = document.querySelector('input[name="quick-provider"]:checked');
+    const selectedProvider = document.querySelector(
+      'input[name="quick-provider"]:checked'
+    );
 
     if (!selectedProvider) {
       this.showStatus('请选择一个AI服务提供商', 'error');
@@ -192,10 +207,10 @@ class ConfigManager {
 
   getProviderName(provider) {
     const names = {
-      'openai': 'OpenAI GPT-4',
-      'azure': 'Azure OpenAI',
-      'anthropic': 'Anthropic Claude',
-      'custom': '自定义服务'
+      openai: 'OpenAI GPT-4',
+      azure: 'Azure OpenAI',
+      anthropic: 'Anthropic Claude',
+      custom: '自定义服务'
     };
     return names[provider] || provider;
   }
@@ -211,7 +226,8 @@ class ConfigManager {
         model: 'gpt-4-vision-preview'
       },
       azure: {
-        endpoint: 'https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2023-12-01-preview',
+        endpoint:
+          'https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2023-12-01-preview',
         model: 'gpt-4-vision-preview'
       },
       anthropic: {
@@ -253,8 +269,8 @@ class ConfigManager {
         data: config
       });
 
-      this.showStatus('配置保存成功！', 'success');
-      this.showNextStepsGuide();
+      this.showStatus('配置保存成功！可以开始使用安全分析功能了', 'success');
+      // this.showNextStepsGuide(); // 禁用弹窗指南
     } catch (error) {
       console.error('保存配置失败:', error);
       this.showStatus('保存配置失败: ' + error.message, 'error');
@@ -264,8 +280,12 @@ class ConfigManager {
   getFormConfig() {
     // 解析自定义选择器
     const customSelectorsText = document.getElementById('custom-selectors').value.trim();
-    const customSelectors = customSelectorsText ?
-      customSelectorsText.split('\n').map(s => s.trim()).filter(s => s) : [];
+    const customSelectors = customSelectorsText
+      ? customSelectorsText
+          .split('\n')
+          .map(s => s.trim())
+          .filter(s => s)
+      : [];
 
     return {
       llmConfig: {
@@ -351,65 +371,16 @@ class ConfigManager {
   }
 
   showNextStepsGuide() {
-    // 延迟显示，让用户先看到保存成功的消息
-    setTimeout(() => {
-      const guideWindow = window.open('', '_blank', 'width=500,height=400,scrollbars=yes');
+    // 使用控制台输出代替弹窗，避免浏览器弹窗拦截
+    console.log('🎉 配置完成！AI服务已成功配置');
+    console.log('📋 使用步骤：');
+    console.log('  1. 在需求管理平台打开产品需求页面');
+    console.log('  2. 点击插件图标启动安全需求分析');
+    console.log('  3. 选择内容源并开始分析');
+    console.log('  4. 查看生成的安全威胁和测试建议');
 
-      const guideHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>配置完成 - 下一步</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
-            .step { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #007cba; }
-            .step h4 { margin: 0 0 10px 0; color: #007cba; }
-            .button-group { text-align: center; margin-top: 20px; }
-            .btn { padding: 10px 20px; margin: 0 10px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-            .primary-btn { background: #007cba; color: white; }
-            .secondary-btn { background: #6c757d; color: white; }
-            .primary-btn:hover { background: #005a87; }
-            .secondary-btn:hover { background: #545b62; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>🎉 配置完成！</h1>
-            <p>AI服务已成功配置，现在可以开始使用安全需求分析功能了</p>
-          </div>
-          
-          <div class="step">
-            <h4>📋 第1步：打开需求页面</h4>
-            <p>在PingCode或其他需求管理平台打开包含产品需求的页面</p>
-          </div>
-          
-          <div class="step">
-            <h4>🛡️ 第2步：启动插件</h4>
-            <p>点击浏览器工具栏中的插件图标（🛡️），插件会自动检测页面内容</p>
-          </div>
-          
-          <div class="step">
-            <h4>🚀 第3步：开始分析</h4>
-            <p>选择需求内容源（附件、页面文本或手动输入），点击"开始分析"按钮</p>
-          </div>
-          
-          <div class="step">
-            <h4>📊 第4步：查看结果</h4>
-            <p>分析完成后会显示详细的安全威胁识别和测试场景建议</p>
-          </div>
-          
-          <div class="button-group">
-            <a href="#" onclick="window.close()" class="btn primary-btn">开始使用</a>
-            <a href="https://github.com/your-repo/wiki" target="_blank" class="btn secondary-btn">查看文档</a>
-          </div>
-        </body>
-        </html>
-      `;
-
-      guideWindow.document.write(guideHtml);
-      guideWindow.document.close();
-    }, 1500);
+    // 可选：显示控制台消息提示
+    this.showStatus('配置完成！请查看控制台了解使用步骤', 'success');
   }
 
   showStatus(message, type) {
